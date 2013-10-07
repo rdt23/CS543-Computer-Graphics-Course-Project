@@ -26,6 +26,7 @@ void moveCtrl( void );
 void variableReset( void );
 void yRotationPointTrans( void );
 void drawNormalVectors( void );
+void drawBoundingBox( void );
 
 typedef Angel::vec4  color4;
 typedef Angel::vec4  point4;
@@ -98,7 +99,10 @@ color4 colors[36];
 face3    face[20000];
 point4    normalOfFace[20000];
 point4    normalVecter[40000];
-point4 normalVecterColorsBuf[40000];
+
+point4    boundingBoxBuf[16];
+
+//point4 normalVecterColorsBuf[40000] = {color4( 1.0, 1.0, 1.0, 1.0 )};
 static int countOfVertex;
 static long countOfFace; 
 
@@ -115,6 +119,8 @@ static float yRotate = 0.0;
 static int enableNormalVecter = 0;
 static int meshPulseLevel = 0;
 static int increment = 1;
+static int enableBoundingBox = 0;
+static float xOffset = 0, zOffset = 0;
 
 void readVertexAndFaceFromFile(int fileIndex)
 {
@@ -199,8 +205,6 @@ void readVertexAndFaceFromFile(int fileIndex)
 
 void generateGeometry( void )
 {	
-    //colorcube();
-
     // Create a vertex array object
     GLuint vao;
     glGenVertexArrays( 1, &vao );
@@ -228,7 +232,7 @@ void generateGeometry( void )
     glVertexAttribPointer( vColor, 4, GL_FLOAT, GL_FALSE, 0, BUFFER_OFFSET(sizeof(pointsBuf)) );
 
 	// sets the default color to clear screen
-    glClearColor( 1.0, 1.0, 1.0, 0.0 ); // white background
+    glClearColor( 1.0, 1.0, 1.0, 1.0 ); // white background
 }
 void drawFile()
 {
@@ -261,19 +265,25 @@ void drawFile()
 		normalVecter[j] = point4(	(pointsBuf[i].x+pointsBuf[i+1].x+pointsBuf[i+2].x)/3, 
 									(pointsBuf[i].y+pointsBuf[i+1].y+pointsBuf[i+2].y)/3, 
 									(pointsBuf[i].z+pointsBuf[i+1].z+pointsBuf[i+2].z)/3, 1.0);
-		normalVecterColorsBuf[j] = color4( 1.0, 1.0, 1.0, 1.0 );
+		//normalVecterColorsBuf[j] = color4( 1.0, 1.0, 1.0, 1.0 );
 		tmp = j;
 		j++;
 		normalVecter[j] = point4(	normalVecter[tmp].x+normalOfFace[i/3].x,
 									normalVecter[tmp].y+normalOfFace[i/3].y,
 									normalVecter[tmp].z+normalOfFace[i/3].z, 1.0);
-		normalVecterColorsBuf[j] = color4( 1.0, 1.0, 1.0, 1.0 );
+		//normalVecterColorsBuf[j] = color4( 1.0, 1.0, 1.0, 1.0 );
 		j++;
 		
 	}
+	/*
+	for(int j = 0; j < countOfFace*2; j++)
+	{
+		normalVecterColorsBuf[j] = color4( 1.0, 1.0, 1.0, 1.0 );
+	}
+	*/
 	if( meshPulseLevel != 0)
 	{
-		for(int i = 0, j = 0; i < countOfFace*3; i++)
+		for(int i = 0; i < countOfFace*3; i++)
 		{
 			float ratio = sqrt(normalOfFace[i/3].x*normalOfFace[i/3].x + normalOfFace[i/3].y*normalOfFace[i/3].y + normalOfFace[i/3].z*normalOfFace[i/3].z)/sqrt(pow(xMax-xMin,2)+pow(yMax-yMin,2)+pow(zMax-zMin,2));
 			pointsBuf[i].x = pointsBuf[i].x + 0.01*meshPulseLevel*normalOfFace[i/3].x / ratio ;
@@ -295,11 +305,15 @@ void drawFile()
 	
     glDrawArrays( GL_TRIANGLES, 0, countOfFace*3 );
 	glDisable( GL_DEPTH_TEST ); 
+
 	if(enableNormalVecter == 1)
 	{
 		drawNormalVectors( );
 	}
-
+	if(enableBoundingBox == 1)
+	{
+		drawBoundingBox();
+	}
 	glFlush(); // force output to graphics hardware
 
 	// use this call to double buffer
@@ -320,10 +334,50 @@ void drawNormalVectors( void )
 	//glFlush();
 	//glutSwapBuffers();
 }
+void drawBoundingBox( void )
+{
+	float xMaxTmp = xMax;
+	float xMinTmp = xMin; 
+	float zMaxTmp = zMax;
+	float zMinTmp = zMin;
+
+	//handle bouding box, when object is rotating
+	if(isYRotation == 1)
+	{
+		xMaxTmp = xMax - xOffset;
+		xMinTmp = xMin - xOffset; 
+		zMaxTmp = zMax - zOffset;
+		zMinTmp = zMin - zOffset;
+	}
+	boundingBoxBuf[0]  = point4( xMinTmp, yMax, zMaxTmp, 1.0 );
+	boundingBoxBuf[1]  = point4( xMaxTmp, yMax, zMaxTmp, 1.0 );
+	boundingBoxBuf[2]  = point4( xMaxTmp, yMax, zMinTmp, 1.0 );
+	boundingBoxBuf[3]  = point4( xMinTmp, yMax, zMinTmp, 1.0 );
+
+	boundingBoxBuf[4]  = point4( xMinTmp, yMax, zMaxTmp, 1.0 );
+	boundingBoxBuf[5]  = point4( xMinTmp, yMin, zMaxTmp, 1.0 );
+
+	boundingBoxBuf[6]  = point4( xMaxTmp, yMin, zMaxTmp, 1.0 );
+	boundingBoxBuf[7]  = point4( xMaxTmp, yMax, zMaxTmp, 1.0 );
+	boundingBoxBuf[8]  = point4( xMaxTmp, yMin, zMaxTmp, 1.0 );
+
+	boundingBoxBuf[9]  = point4( xMaxTmp, yMin, zMinTmp, 1.0 );
+	boundingBoxBuf[10] = point4( xMaxTmp, yMax, zMinTmp, 1.0 );
+	boundingBoxBuf[11] = point4( xMaxTmp, yMin, zMinTmp, 1.0 );
+
+	boundingBoxBuf[12] = point4( xMinTmp, yMin, zMinTmp, 1.0 );
+	boundingBoxBuf[13] = point4( xMinTmp, yMax, zMinTmp, 1.0 );
+	boundingBoxBuf[14] = point4( xMinTmp, yMin, zMinTmp, 1.0 );
+	boundingBoxBuf[15] = point4( xMinTmp, yMin, zMaxTmp, 1.0 );
+
+	glBufferData( GL_ARRAY_BUFFER, sizeof(boundingBoxBuf), boundingBoxBuf, GL_STATIC_DRAW );
+	glEnable( GL_DEPTH_TEST );
+	glDrawArrays(GL_LINE_STRIP, 0, 16 ); 
+	glDisable( GL_DEPTH_TEST ); 
+}
 
 void displayFileInScreen( void )
 {
-	//printf("fileIndex = %d \t",fileIndex);
 	if(fileIndex < 0)
 	{
 		fileIndex = 42;
@@ -332,11 +386,9 @@ void displayFileInScreen( void )
 	{
 		fileIndex = 0;
 	}
-	//printf("%d \n",fileIndex);
 	glClear( GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT );     // clear the window
 	readVertexAndFaceFromFile(fileIndex);
 
-	//printf("Go through file!\n");
 	Angel::mat4 perspectiveMat = Angel::Perspective((GLfloat)60.0, (GLfloat)width/(GLfloat)height, (GLfloat)0.1, (GLfloat) 10000.0);
 
 	float viewMatrixf[16];
@@ -352,15 +404,6 @@ void displayFileInScreen( void )
 
 	Angel::mat4 modelMat = Angel::identity();
 
-	/*
-	printf("vex = %d\t face = %d\n", countOfVertex, countOfFace);
-	printf("xMax = %f\n", xMax);
-	printf("xMin = %f\n", xMin);
-	printf("yMax = %f\n", yMax);
-	printf("yMin = %f\n", yMin);
-	printf("zMax = %f\n", zMax);
-	printf("zMin = %f\n\n", zMin);
-	*/
 	modelMat = modelMat * Angel::Translate(-(xMax+xMin)/2 + xMove, -(yMax+yMin)/2 + yMove, - sqrt(pow(xMax-xMin,2)+pow(yMax-yMin,2)+pow(zMax-zMin,2)) + zMove) * Angel::RotateY(yRotate) * Angel::RotateX(0.0f);
 	//sqrt(pow(xMax-xMin,2)+pow(yMax-yMin,2)+pow(zMax-zMin,2))
 	float modelMatrixf[16];
@@ -579,8 +622,9 @@ void moveCtrl( void )
 }
 void yRotationPointTrans( void )
 {
-	float xOffset = (xMax+xMin)/2;
-	float zOffset = (zMax+zMin)/2;
+	xOffset = (xMax+xMin)/2;
+	zOffset = (zMax+zMin)/2;
+
 	xMove = (xMax+xMin)/2;
 	for(int i = 0; i < countOfFace*3; i++)
 	{
@@ -688,7 +732,7 @@ void keyboard( unsigned char key, int x, int y )
 			break;
 
 		case 'e':
-			enableNormalVecter = !enableNormalVecter;
+			enableBoundingBox =!enableBoundingBox;
 			displayFileInScreen();
 			break;
 
