@@ -611,7 +611,7 @@ void move( void )
 			{
 				increment = -1;
 			}
-			else if(meshPulseLevel <= 1)
+			else if(meshPulseLevel < 1)
 			{
 				increment = 1;
 			}
