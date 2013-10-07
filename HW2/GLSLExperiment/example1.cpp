@@ -90,38 +90,53 @@ static char fileName[43][20] = {
 						};
 
 
+static int countOfVertex;
+static long countOfFace; 
+//store points from ply files
 point4 points[10000];
+//store mesh information from ply files
+face3    face[20000];
 
+//store the points, which will be used to draw the object
 point4 pointsBuf[60000];
 color4 colorsBuf[60000] = {color4( 0.0, 1.0, 0.0, 1.0 )};
-color4 colors[36];
 
-face3    face[20000];
+//variables dealing with normal vecters
 point4    normalOfFace[20000];
 point4    normalVecter[40000];
 
+//variables stores 16 points for bounding box
 point4    boundingBoxBuf[16];
 
-//point4 normalVecterColorsBuf[40000] = {color4( 1.0, 1.0, 1.0, 1.0 )};
-static int countOfVertex;
-static long countOfFace; 
-
 static float xMax, xMin, yMax, yMin, zMax, zMin;
-static int fileIndex = 0;
-static float xMove = 0;
+static int fileIndex = 0; // from 0 ~ 42 represents 43 ply files
+
+// used for "X/x", "Y/y", "Z/z" events, store the offset for three direction
+static float xMove = 0; 
 static float yMove = 0;
 static float zMove = 0;
+
+// "direction" is an important for idle->move() function
 static int direction = 0;
 float step = 0;
 int stopFlag = 0;
+
+//whether current event is "R" event, "1" means true
 static int isYRotation = 0;
+
 static float yRotate = 0.0;
+
+//whether diplay normal vecters or not
 static int enableNormalVecter = 0;
+
 static int meshPulseLevel = 0;
 static int increment = 1;
+
+//whether diplay bounding box or not
 static int enableBoundingBox = 0;
 static float xOffset = 0, zOffset = 0;
 
+//load info from ply file into arrays
 void readVertexAndFaceFromFile(int fileIndex)
 {
 	char line[256];
@@ -200,9 +215,6 @@ void readVertexAndFaceFromFile(int fileIndex)
 
 	fclose(inStream);
 }
-
-// generate 12 triangles: 36 vertices and 36 colors
-
 void generateGeometry( void )
 {	
     // Create a vertex array object
@@ -234,6 +246,8 @@ void generateGeometry( void )
 	// sets the default color to clear screen
     glClearColor( 1.0, 1.0, 1.0, 1.0 ); // white background
 }
+
+//generate the drawing buffer for drawing, then draw it (actually, everything related to drawing is drawn here)
 void drawFile()
 {
 	float x1, y1, z1, x2, y2, z2;
@@ -349,6 +363,8 @@ void drawBoundingBox( void )
 		zMaxTmp = zMax - zOffset;
 		zMinTmp = zMin - zOffset;
 	}
+
+	//use 16 points to draw bounding box
 	boundingBoxBuf[0]  = point4( xMinTmp, yMax, zMaxTmp, 1.0 );
 	boundingBoxBuf[1]  = point4( xMaxTmp, yMax, zMaxTmp, 1.0 );
 	boundingBoxBuf[2]  = point4( xMaxTmp, yMax, zMinTmp, 1.0 );
@@ -659,6 +675,7 @@ void keyboard( unsigned char key, int x, int y )
 	{
 		case 'W':
 			variableReset();
+			fileIndex = 0;
 			displayFileInScreen();
 			break;
 		case 'N':
@@ -685,28 +702,28 @@ void keyboard( unsigned char key, int x, int y )
 				moveCtrl();
 			}
 			break;
-		case 'y':
+		case 'Y':
 			if(isYRotation == 0)
 			{
 				direction = Y_UP;
 				moveCtrl();
 			}
 			break;
-		case 'Y':
+		case 'y':
 			if(isYRotation == 0)
 			{
 				direction = Y_DOWN;
 				moveCtrl();
 			}
 			break;
-		case 'z':
+		case 'Z':
 			if(isYRotation == 0)
 			{
 				direction = Z_FRONT;
 				moveCtrl();
 			}
 			break;
-		case 'Z':
+		case 'z':
 			if(isYRotation == 0)
 			{
 				direction = Z_BACK;
