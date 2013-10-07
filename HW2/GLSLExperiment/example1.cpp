@@ -598,6 +598,7 @@ void move( void )
 			{
 				fileIndex = 0;
 				direction = 0;
+				variableReset();
 			}
 			displayFileInScreen();
 			glutPostRedisplay();
@@ -648,6 +649,7 @@ void yRotationPointTrans( void )
 		pointsBuf[i].z = pointsBuf[i].z - zOffset;
 	}
 
+	//revise display of normal vecters, when doing Y rotation
 	for(int i = 0; i < countOfFace*2; i++)
 	{
 		normalVecter[i].x = normalVecter[i].x - xOffset;
