@@ -29,6 +29,52 @@ const int NumVertices = 36; //(6 faces)(2 triangles/face)(3 vertices/triangle)
 point4 points[NumVertices];
 color4 colors[NumVertices];
 
+int len = 1;
+int iteration = 3;
+float rotaionX = 0;
+float rotaionY = 0;
+float rotaionZ = 0;
+char start = 'F';
+char formula[32];
+char fileName[4][10] = {"lsys1.txt","lsys2.txt","lsys3.txt","lsys4.txt"};
+
+void readFile(int index)
+{
+	char line[64];
+    FILE *inStream;
+
+    if((inStream = fopen(fileName[index], "rt")) == NULL) // Open The File
+    {
+        printf("File does not exist!");
+        exit(0);
+    }
+
+    while(!feof(inStream))
+    {
+         //Just go through file header
+         memset(line, 0, 64);
+         fscanf(inStream, "%s",line);
+         if(strcmp(line, "len:") == 0)
+         {
+             fscanf(inStream, "%d",&len);
+			 fscanf(inStream, "%s %d",line, &iteration);
+			 fscanf(inStream, "%s %f %f %f",line, &rotaionX, &rotaionY, &rotaionZ);
+			 fscanf(inStream, "%s %c",line, &start);
+			 fscanf(inStream, "%s %s",line, formula);
+			 break;
+         }
+		 
+     }
+        
+	fclose(inStream);
+}
+
+void do_iteration( )
+{
+
+}
+
+
 // Vertices of a unit cube centered at origin, sides aligned with axes
 point4 vertices[8] = {
     point4( -0.5, -0.5,  0.5, 1.0 ),
@@ -218,10 +264,14 @@ void display( void )
 // keyboard handler
 void keyboard( unsigned char key, int x, int y )
 {
-    switch ( key ) {
-    case 033:
-        exit( EXIT_SUCCESS );
-        break;
+    switch ( key ) 
+	{
+		case 'q':
+			readFile(1);
+			break;
+		case 033:
+			exit( EXIT_SUCCESS );
+			break;
     }
 }
 

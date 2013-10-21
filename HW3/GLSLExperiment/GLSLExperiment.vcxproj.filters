@@ -42,4 +42,24 @@
       <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>
+  <ItemGroup>
+    <None Include="fshader1.glsl">
+      <Filter>Resource Files</Filter>
+    </None>
+    <None Include="lsys1.txt">
+      <Filter>Resource Files</Filter>
+    </None>
+    <None Include="lsys2.txt">
+      <Filter>Resource Files</Filter>
+    </None>
+    <None Include="lsys3.txt">
+      <Filter>Resource Files</Filter>
+    </None>
+    <None Include="lsys4.txt">
+      <Filter>Resource Files</Filter>
+    </None>
+    <None Include="vshader1.glsl">
+      <Filter>Resource Files</Filter>
+    </None>
+  </ItemGroup>
 </Project>
