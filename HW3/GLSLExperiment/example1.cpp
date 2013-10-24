@@ -15,6 +15,7 @@ void keyboard( unsigned char key, int x, int y );
 void quad( int a, int b, int c, int d );
 void colorcube(void);
 void drawCube(void);
+void myDisplay( int );
 
 typedef Angel::vec4  color4;
 typedef Angel::vec4  point4;
@@ -24,15 +25,18 @@ GLuint program;
 
 using namespace std;
 
-const int NumVertices = 36; //(6 faces)(2 triangles/face)(3 vertices/triangle)
-
-color4 colors[NumVertices];
 typedef struct linklist
 {
 	char value;
 	struct linklist *next;
 } *linkList,linkNode;
 
+typedef struct 			
+{
+	int vertex1;		//X point index
+	int vertex2;		//Y point index
+	int vertex3;		//Z point index
+} face3;
 
 int len = 1;
 int iteration = 3;
@@ -45,30 +49,24 @@ linkList ll = (linkNode*)malloc(sizeof(linkNode));
 
 char fileName[4][10] = {"lsys1.txt","lsys2.txt","lsys3.txt","lsys4.txt"};
 char plyFileName[2][15] = {"cylinder.ply","sphere.ply"};
-typedef struct 			
-{
-	int vertex1;		//X point index
-	int vertex2;		//Y point index
-	int vertex3;		//Z point index
-} face3;
-static int countOfVertex;
-static long countOfFace; 
+
+static int countOfVertex[2];
+static int countOfFace[2]; 
 //store points from ply files
 point4 points[200];
-point4 pointsBuf[1000];
-color4 colorsBuf[1000];
 //store mesh information from ply files
-face3    face[20000];
+face3    face[360];
 
-//variables dealing with normal vecters
-point4    normalOfFace[20000];
-point4    normalVecter[40000];
+point4 spherePointsBuf[1000];
+color4 sphereColorsBuf[1000];
+point4 cylinderPointsBuf[200];
+color4 cylinderColorsBuf[200];
+
 static int fileIndex = 0;
-
-static float xMax, xMin, yMax, yMin, zMax, zMin;
+float xMax[2], xMin[2], yMax[2], yMin[2], zMax[2], zMin[2];
 
 //load info from ply file into arrays
-void readVertexAndFaceFromFile(int fileIndex)
+void plyFileLoad(int fileIndex)
 {
 	char line[256];
 	FILE *inStream;
@@ -76,8 +74,8 @@ void readVertexAndFaceFromFile(int fileIndex)
 	float x,y,z;
 	int vertex1, vertex2, vertex3;
 
-	xMax = yMax = zMax = -999999;
-	xMin = yMin = zMin = FLT_MAX;
+	xMax[fileIndex] = yMax[fileIndex] = zMax[fileIndex] = -999999;
+	xMin[fileIndex] = yMin[fileIndex] = zMin[fileIndex] = FLT_MAX;
 
 	if((inStream = fopen(plyFileName[fileIndex], "rt")) == NULL) // Open The File
 	{
@@ -92,11 +90,11 @@ void readVertexAndFaceFromFile(int fileIndex)
 		fscanf(inStream, "%s",line);
 		if(strcmp(line, "vertex") == 0)
 		{
-			fscanf(inStream, "%d",&countOfVertex);
+			fscanf(inStream, "%d",&countOfVertex[fileIndex]);
 		}
 		else if(strcmp(line, "face") == 0)
 		{
-			fscanf(inStream, "%ld",&countOfFace);
+			fscanf(inStream, "%d",&countOfFace[fileIndex]);
 
 		}
 		else if(strcmp(line, "end_header") == 0)
@@ -110,27 +108,27 @@ void readVertexAndFaceFromFile(int fileIndex)
 
 	}
 	
-	for(int j = 0; j < countOfVertex; j++)
+	for(int j = 0; j < countOfVertex[fileIndex]; j++)
 	{	//read each vertex
 		
 		fscanf(inStream,"%f %f %f", &x, &y, &z);
 		if(j == 0)
 		{
-			xMax = xMin = x;
-			yMax = yMin = y;
-			zMax = zMin = z;
+			xMax[fileIndex] = xMin[fileIndex] = x;
+			yMax[fileIndex] = yMin[fileIndex] = y;
+			zMax[fileIndex] = zMin[fileIndex] = z;
 		}
 		points[j] =  point4( x, y, z, 1.0 );
 		//printf("%f %f %f\n", x,y,z);
-		if(xMax < x) xMax = x;
-		if(yMax < y) yMax = y;
-		if(zMax < z) zMax = z;
-		if(xMin > x) xMin = x;
-		if(yMin > y) yMin = y;
-		if(zMin > z) zMin = z;
+		if(xMax[fileIndex] < x) xMax[fileIndex] = x;
+		if(yMax[fileIndex] < y) yMax[fileIndex] = y;
+		if(zMax[fileIndex] < z) zMax[fileIndex] = z;
+		if(xMin[fileIndex] > x) xMin[fileIndex] = x;
+		if(yMin[fileIndex] > y) yMin[fileIndex] = y;
+		if(zMin[fileIndex] > z) zMin[fileIndex] = z;
 	}
 
-	for(int j = 0; j < countOfFace; j++)
+	for(int j = 0; j < countOfFace[fileIndex]; j++)
 	{	//read each vertex
 		fscanf(inStream,"%d %d %d %d ", &lineNum, &vertex1, &vertex2, &vertex3);
 		//printf("%d %d %d\n", vertex1,vertex2,vertex3);
@@ -140,6 +138,30 @@ void readVertexAndFaceFromFile(int fileIndex)
 	}
 
 	fclose(inStream);
+	if(fileIndex == 0)
+	{
+		for(int i = 0, j = 0; i < countOfFace[fileIndex]*3; i=i+3)
+		{
+			cylinderPointsBuf[i] = points[face[i/3].vertex1];
+			cylinderPointsBuf[i+1] = points[face[i/3].vertex2];
+			cylinderPointsBuf[i+2] = points[face[i/3].vertex3];
+			cylinderColorsBuf[i] = color4( 0.0, 1.0, 0.0, 1.0 );
+			cylinderColorsBuf[i+1] = color4( 0.0, 1.0, 0.0, 1.0 );
+			cylinderColorsBuf[i+2] = color4( 0.0, 1.0, 0.0, 1.0 );
+		}
+	}
+	else
+	{
+		for(int i = 0, j = 0; i < countOfFace[fileIndex]*3; i=i+3)
+		{
+			spherePointsBuf[i] = points[face[i/3].vertex1];
+			spherePointsBuf[i+1] = points[face[i/3].vertex2];
+			spherePointsBuf[i+2] = points[face[i/3].vertex3];
+			sphereColorsBuf[i] = color4( 0.0, 1.0, 0.0, 1.0 );
+			sphereColorsBuf[i+1] = color4( 0.0, 1.0, 0.0, 1.0 );
+			sphereColorsBuf[i+2] = color4( 0.0, 1.0, 0.0, 1.0 );
+		}
+	}
 }
 
 void readFile(int index)
@@ -185,24 +207,28 @@ void readFile(int index)
 //generate the drawing buffer for drawing, then draw it (actually, everything related to drawing is drawn here)
 void drawFile(int fileIndex)
 {
-	readVertexAndFaceFromFile(fileIndex);
 	glPolygonMode( GL_FRONT_AND_BACK, GL_LINE );
-	for(int i = 0, j = 0; i < countOfFace*3; i=i+3)
+	if(fileIndex == 0)
 	{
-		pointsBuf[i] = points[face[i/3].vertex1];
-		pointsBuf[i+1] = points[face[i/3].vertex2];
-		pointsBuf[i+2] = points[face[i/3].vertex3];
-		colorsBuf[i] = color4( 0.0, 1.0, 0.0, 1.0 );
-		colorsBuf[i+1] = color4( 0.0, 1.0, 0.0, 1.0 );
-		colorsBuf[i+2] = color4( 0.0, 1.0, 0.0, 1.0 );
+		//glBufferData( GL_ARRAY_BUFFER, sizeof(pointsBuf), pointsBuf, GL_STATIC_DRAW );
+		glBufferData( GL_ARRAY_BUFFER, sizeof(cylinderPointsBuf) + sizeof(cylinderColorsBuf), NULL, GL_STATIC_DRAW );
+		glBufferSubData( GL_ARRAY_BUFFER, 0, sizeof(cylinderPointsBuf), cylinderPointsBuf );
+		glBufferSubData( GL_ARRAY_BUFFER, sizeof(cylinderPointsBuf), sizeof(cylinderColorsBuf), cylinderColorsBuf );
+		GLuint vColor = glGetAttribLocation( program, "vColor" ); 
+		glEnableVertexAttribArray( vColor );
+		glVertexAttribPointer( vColor, 4, GL_FLOAT, GL_FALSE, 0, BUFFER_OFFSET(sizeof(cylinderPointsBuf)) );
 	}
-	//glBufferData( GL_ARRAY_BUFFER, sizeof(pointsBuf), pointsBuf, GL_STATIC_DRAW );
-	glBufferData( GL_ARRAY_BUFFER, sizeof(pointsBuf) + sizeof(colorsBuf), NULL, GL_STATIC_DRAW );
-    glBufferSubData( GL_ARRAY_BUFFER, 0, sizeof(pointsBuf), pointsBuf );
-    glBufferSubData( GL_ARRAY_BUFFER, sizeof(pointsBuf), sizeof(colorsBuf), colorsBuf );
-
+	else
+	{
+		glBufferData( GL_ARRAY_BUFFER, sizeof(spherePointsBuf) + sizeof(sphereColorsBuf), NULL, GL_STATIC_DRAW );
+		glBufferSubData( GL_ARRAY_BUFFER, 0, sizeof(spherePointsBuf), spherePointsBuf );
+		glBufferSubData( GL_ARRAY_BUFFER, sizeof(spherePointsBuf), sizeof(sphereColorsBuf), sphereColorsBuf );
+		GLuint vColor = glGetAttribLocation( program, "vColor" ); 
+		glEnableVertexAttribArray( vColor );
+		glVertexAttribPointer( vColor, 4, GL_FLOAT, GL_FALSE, 0, BUFFER_OFFSET(sizeof(spherePointsBuf)) );
+	}
 	glEnable( GL_DEPTH_TEST );
-    glDrawArrays( GL_TRIANGLES, 0, countOfFace*3 );
+    glDrawArrays( GL_TRIANGLES, 0, countOfFace[fileIndex]*3 );
 	glDisable( GL_DEPTH_TEST ); 
 	glFlush(); // force output to graphics hardware
 
@@ -210,12 +236,50 @@ void drawFile(int fileIndex)
 	 glutSwapBuffers();
 }
 
-void do_iteration( )
+void do_iteration(int index)
 {
+	readFile(index);
+	linkList cursor;
+	for(int i = 1; i < iteration; i++)
+	{
+		cursor = ll->next;
+		while(cursor != NULL)
+		{
+			if(cursor->value == 'F')
+			{
+				int formulaLength = strlen(formula);
+				for(int j = 1; j < formulaLength; j++)
+				{
+					linkList tmpNode = (linkNode*)malloc(sizeof(linkNode));
+					tmpNode->value = formula[j];
+					tmpNode->next = cursor->next;
+					cursor->next = tmpNode;
 
+					cursor = cursor->next;
+				}
+				cursor = cursor->next;
+			}
+			else
+			{
+				cursor = cursor->next;
+			}
+		}
+	}
 }
 
-
+int get_count()
+{
+	linkList cursor = ll->next;
+	int count = 0;
+	while(cursor != NULL)
+	{
+		count ++;
+		//printf("%c",cursor->value);
+		cursor = cursor->next;
+		
+	}
+	return count;
+}
 void generateGeometry( void )
 {	
     // Create a vertex array object
@@ -227,6 +291,8 @@ void generateGeometry( void )
     GLuint buffer;
     glGenBuffers( 1, &buffer );
     glBindBuffer( GL_ARRAY_BUFFER, buffer );
+	//
+	//
 
 	// Load shaders and use the resulting shader program
     program = InitShader( "vshader1.glsl", "fshader1.glsl" );
@@ -236,10 +302,11 @@ void generateGeometry( void )
     glEnableVertexAttribArray( vPosition );
     glVertexAttribPointer( vPosition, 4, GL_FLOAT, GL_FALSE, 0, BUFFER_OFFSET(0) );
 
+	/*
     GLuint vColor = glGetAttribLocation( program, "vColor" ); 
     glEnableVertexAttribArray( vColor );
-    glVertexAttribPointer( vColor, 4, GL_FLOAT, GL_FALSE, 0, BUFFER_OFFSET(sizeof(pointsBuf)) );
-
+    glVertexAttribPointer( vColor, 4, GL_FLOAT, GL_FALSE, 0, BUFFER_OFFSET(sizeof(spherePointsBuf)) );
+	*/
 	// sets the default color to clear screen
     glClearColor( 0.0, 0.0, 0.0, 1.0 ); // white background
 }
@@ -249,6 +316,7 @@ void generateGeometry( void )
 void display( void )
 {
     glClear( GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT );     // clear the window
+	
 	Angel::mat4 perspectiveMat = Angel::Perspective((GLfloat)45.0, (GLfloat)width/(GLfloat)height, (GLfloat)0.1, (GLfloat) 1000.0);
 
 	float viewMatrixf[16];
@@ -263,7 +331,7 @@ void display( void )
 	viewMatrixf[11] = perspectiveMat[3][2];viewMatrixf[15] = perspectiveMat[3][3];
 	
 	Angel::mat4 modelMat = Angel::identity();
-	modelMat = modelMat * Angel::Translate(-(xMax+xMin)/2, -(yMax+yMin)/2, - sqrt(pow(xMax-xMin,2)+pow(yMax-yMin,2)+pow(zMax-zMin,2))) * Angel::RotateY(90.0f) * Angel::RotateX(0.0f);
+	modelMat = modelMat * Angel::Translate(-(xMax[0]+xMin[0])/2, -(yMax[0]+yMin[0])/2, - sqrt(pow(xMax[0]-xMin[0],2)+pow(yMax[0]-yMin[0],2)+pow(zMax[0]-zMin[0],2))) * Angel::RotateY(90.0f) * Angel::RotateX(0.0f);
 	float modelMatrixf[16];
 	modelMatrixf[0] = modelMat[0][0];modelMatrixf[4] = modelMat[0][1];
 	modelMatrixf[1] = modelMat[1][0];modelMatrixf[5] = modelMat[1][1];
@@ -280,11 +348,27 @@ void display( void )
 	glUniformMatrix4fv( modelMatrix, 1, GL_FALSE, modelMatrixf );
 	GLuint viewMatrix = glGetUniformLocationARB(program, "projection_matrix");
 	glUniformMatrix4fv( viewMatrix, 1, GL_FALSE, viewMatrixf);
-	drawFile(0);
+
+	glPolygonMode( GL_FRONT_AND_BACK, GL_LINE );
+	//glBufferData( GL_ARRAY_BUFFER, sizeof(pointsBuf), pointsBuf, GL_STATIC_DRAW );
+	glBufferData( GL_ARRAY_BUFFER, sizeof(cylinderPointsBuf) + sizeof(cylinderColorsBuf), NULL, GL_STATIC_DRAW );
+	glBufferSubData( GL_ARRAY_BUFFER, 0, sizeof(cylinderPointsBuf), cylinderPointsBuf );
+	glBufferSubData( GL_ARRAY_BUFFER, sizeof(cylinderPointsBuf), sizeof(cylinderColorsBuf), cylinderColorsBuf );
+	GLuint vColor = glGetAttribLocation( program, "vColor" ); 
+	glEnableVertexAttribArray( vColor );
+	glVertexAttribPointer( vColor, 4, GL_FLOAT, GL_FALSE, 0, BUFFER_OFFSET(sizeof(cylinderPointsBuf)) );
+	
+	glEnable( GL_DEPTH_TEST );
+    glDrawArrays( GL_TRIANGLES, 0, countOfFace[fileIndex]*3 );
+	glDisable( GL_DEPTH_TEST ); 
+
+	myDisplay( 0 );
+	
 
 }
 void myDisplay( int fileIndex )
 {
+	//glClear( GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT );     // clear the window
 	Angel::mat4 perspectiveMat = Angel::Perspective((GLfloat)45.0, (GLfloat)width/(GLfloat)height, (GLfloat)0.1, (GLfloat) 1000.0);
 
 	float viewMatrixf[16];
@@ -299,7 +383,7 @@ void myDisplay( int fileIndex )
 	viewMatrixf[11] = perspectiveMat[3][2];viewMatrixf[15] = perspectiveMat[3][3];
 	
 	Angel::mat4 modelMat = Angel::identity();
-	modelMat = modelMat * Angel::Translate(-(xMax+xMin)/2, -(yMax+yMin)/2, - sqrt(pow(xMax-xMin,2)+pow(yMax-yMin,2)+pow(zMax-zMin,2))) * Angel::RotateY(90.0f) * Angel::RotateX(0.0f);
+	modelMat = modelMat * Angel::Translate(-(xMax[fileIndex]+xMin[fileIndex])/2-1, -(yMax[fileIndex]+yMin[fileIndex])/2, - sqrt(pow(xMax[fileIndex]-xMin[fileIndex],2)+pow(yMax[fileIndex]-yMin[fileIndex],2)+pow(zMax[fileIndex]-zMin[fileIndex],2))) * Angel::RotateY(45.0f) * Angel::RotateX(0.0f);
 	float modelMatrixf[16];
 	modelMatrixf[0] = modelMat[0][0];modelMatrixf[4] = modelMat[0][1];
 	modelMatrixf[1] = modelMat[1][0];modelMatrixf[5] = modelMat[1][1];
@@ -327,14 +411,19 @@ void keyboard( unsigned char key, int x, int y )
     switch ( key ) 
 	{
 		case 'q':
+			glClear( GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT );
 			//readVertexAndFaceFromFile(0);
 			myDisplay(0);
 			break;
 		case 'w':
+			glClear( GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT );
 			//readVertexAndFaceFromFile(1);
 			myDisplay(1);
 			break;
-
+		case 'a':
+			do_iteration(2);
+			printf("\n\n%d\n",get_count());
+			break;
 		case 033:
 			exit( EXIT_SUCCESS );
 			break;
@@ -358,24 +447,17 @@ int main( int argc, char **argv )
     glutInitContextVersion( 3, 1 );
     glutInitContextProfile( GLUT_CORE_PROFILE );
 
-	// create window
-	// opengl can be incorperated into other packages like wxwidgets, fltoolkit, etc.
     glutCreateWindow( "HW3 -- Hao" );
 
 	// init glew
     glewInit();
 
     generateGeometry();
-
+	plyFileLoad(0);
+	plyFileLoad(1);
 	// assign handlers
     glutDisplayFunc( display );
     glutKeyboardFunc( keyboard );
-	// should add menus
-	// add mouse handler
-	// add resize window functionality (should probably try to preserve aspect ratio)
-
-	// enter the drawing loop
-	// frame rate can be controlled with 
     glutMainLoop();
     return 0;
 }
