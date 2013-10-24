@@ -26,8 +26,13 @@ using namespace std;
 
 const int NumVertices = 36; //(6 faces)(2 triangles/face)(3 vertices/triangle)
 
-point4 points[NumVertices];
 color4 colors[NumVertices];
+typedef struct linklist
+{
+	char value;
+	struct linklist *next;
+} *linkList,linkNode;
+
 
 int len = 1;
 int iteration = 3;
@@ -36,45 +41,31 @@ float rotaionY = 0;
 float rotaionZ = 0;
 char start = 'F';
 char formula[32];
+linkList ll = (linkNode*)malloc(sizeof(linkNode));
+
 char fileName[4][10] = {"lsys1.txt","lsys2.txt","lsys3.txt","lsys4.txt"};
-
-void readFile(int index)
+char plyFileName[2][15] = {"cylinder.ply","sphere.ply"};
+typedef struct 			
 {
-	char line[64];
-    FILE *inStream;
+	int vertex1;		//X point index
+	int vertex2;		//Y point index
+	int vertex3;		//Z point index
+} face3;
+static int countOfVertex;
+static long countOfFace; 
+//store points from ply files
+point4 points[10000];
+point4 pointsBuf[60000];
+color4 colorsBuf[60000] = {color4( 0.0, 1.0, 0.0, 1.0 )};
+//store mesh information from ply files
+face3    face[20000];
 
-    if((inStream = fopen(fileName[index], "rt")) == NULL) // Open The File
-    {
-        printf("File does not exist!");
-        exit(0);
-    }
+//variables dealing with normal vecters
+point4    normalOfFace[20000];
+point4    normalVecter[40000];
+static int fileIndex = 0;
 
-    while(!feof(inStream))
-    {
-         //Just go through file header
-         memset(line, 0, 64);
-         fscanf(inStream, "%s",line);
-         if(strcmp(line, "len:") == 0)
-         {
-             fscanf(inStream, "%d",&len);
-			 fscanf(inStream, "%s %d",line, &iteration);
-			 fscanf(inStream, "%s %f %f %f",line, &rotaionX, &rotaionY, &rotaionZ);
-			 fscanf(inStream, "%s %c",line, &start);
-			 fscanf(inStream, "%s %s",line, formula);
-			 break;
-         }
-		 
-     }
-        
-	fclose(inStream);
-}
-
-void do_iteration( )
-{
-
-}
-
-
+static float xMax, xMin, yMax, yMin, zMax, zMin;
 // Vertices of a unit cube centered at origin, sides aligned with axes
 point4 vertices[8] = {
     point4( -0.5, -0.5,  0.5, 1.0 ),
@@ -97,6 +88,156 @@ color4 vertex_colors[8] = {
     color4( 1.0, 1.0, 1.0, 1.0 ),  // white
     color4( 0.0, 1.0, 1.0, 1.0 )   // cyan
 };
+//load info from ply file into arrays
+void readVertexAndFaceFromFile(int fileIndex)
+{
+	char line[256];
+	FILE *inStream;
+	int lineNum = 0;
+	float x,y,z;
+	int vertex1, vertex2, vertex3;
+
+	xMax = yMax = zMax = -999999;
+	xMin = yMin = zMin = FLT_MAX;
+
+	if((inStream = fopen(plyFileName[fileIndex], "rt")) == NULL) // Open The File
+	{
+		printf("File does not exist!");
+		exit(0);
+	}
+
+	while(!feof(inStream))
+	{
+		//Just go through file header
+		memset(line, 0, 256);
+		fscanf(inStream, "%s",line);
+		if(strcmp(line, "vertex") == 0)
+		{
+			fscanf(inStream, "%d",&countOfVertex);
+		}
+		else if(strcmp(line, "face") == 0)
+		{
+			fscanf(inStream, "%ld",&countOfFace);
+
+		}
+		else if(strcmp(line, "end_header") == 0)
+		{
+			break;
+		}
+		else
+		{
+			continue;
+		}
+
+	}
+	
+	for(int j = 0; j < countOfVertex; j++)
+	{	//read each vertex
+		
+		fscanf(inStream,"%f %f %f", &x, &y, &z);
+		if(j == 0)
+		{
+			xMax = xMin = x;
+			yMax = yMin = y;
+			zMax = zMin = z;
+		}
+		points[j] =  point4( x, y, z, 1.0 );
+		//printf("%f %f %f\n", x,y,z);
+		if(xMax < x) xMax = x;
+		if(yMax < y) yMax = y;
+		if(zMax < z) zMax = z;
+		if(xMin > x) xMin = x;
+		if(yMin > y) yMin = y;
+		if(zMin > z) zMin = z;
+	}
+
+	for(int j = 0; j < countOfFace; j++)
+	{	//read each vertex
+		fscanf(inStream,"%d %d %d %d ", &lineNum, &vertex1, &vertex2, &vertex3);
+		//printf("%d %d %d\n", vertex1,vertex2,vertex3);
+		face[j].vertex1 =  vertex1;
+		face[j].vertex2 =  vertex2;
+		face[j].vertex3 =  vertex3;
+	}
+
+	fclose(inStream);
+}
+
+void readFile(int index)
+{
+	char line[64];
+    FILE *inStream;
+
+	linkList cursor = ll;
+    if((inStream = fopen(fileName[index], "rt")) == NULL) // Open The File
+    {
+        printf("File does not exist!");
+        exit(0);
+    }
+
+    while(!feof(inStream))
+    {
+         //Just go through file header
+         memset(line, 0, 64);
+         fscanf(inStream, "%s",line);
+         if(strcmp(line, "len:") == 0)
+         {
+             fscanf(inStream, "%d",&len);
+			 fscanf(inStream, "%s %d",line, &iteration);
+			 fscanf(inStream, "%s %f %f %f",line, &rotaionX, &rotaionY, &rotaionZ);
+			 fscanf(inStream, "%s %c",line, &start);
+			 fscanf(inStream, "%s %s",line, formula);
+			 for(int i = 0; i < strlen(formula); i++)
+			 {
+				 linkList tmpNode = (linkNode*)malloc(sizeof(linkNode));
+				 tmpNode->value = formula[i];
+				 tmpNode->next = NULL;
+				 cursor->next = tmpNode;
+				 cursor = cursor->next;
+			 }
+			 break;
+         }
+		 
+     }
+        
+	fclose(inStream);
+}
+
+//generate the drawing buffer for drawing, then draw it (actually, everything related to drawing is drawn here)
+void drawFile()
+{
+	glPolygonMode( GL_FRONT_AND_BACK, GL_LINE );
+	for(int i = 0, j = 0; i < countOfFace*3; i=i+3)
+	{
+		pointsBuf[i] = points[face[i/3].vertex1];
+		pointsBuf[i+1] = points[face[i/3].vertex2];
+		pointsBuf[i+2] = points[face[i/3].vertex3];
+		colorsBuf[i] = color4( 0.0, 1.0, 0.0, 1.0 );
+		colorsBuf[i+1] = color4( 0.0, 1.0, 0.0, 1.0 );
+		colorsBuf[i+2] = color4( 0.0, 1.0, 0.0, 1.0 );
+	}
+	//glBufferData( GL_ARRAY_BUFFER, sizeof(pointsBuf), pointsBuf, GL_STATIC_DRAW );
+	glBufferData( GL_ARRAY_BUFFER, sizeof(pointsBuf) + sizeof(colorsBuf), NULL, GL_STATIC_DRAW );
+    glBufferSubData( GL_ARRAY_BUFFER, 0, sizeof(pointsBuf), pointsBuf );
+    glBufferSubData( GL_ARRAY_BUFFER, sizeof(pointsBuf), sizeof(colorsBuf), colorsBuf );
+
+	glEnable( GL_DEPTH_TEST );
+	
+    glDrawArrays( GL_TRIANGLES, 0, countOfFace*3 );
+	glDisable( GL_DEPTH_TEST ); 
+	glFlush(); // force output to graphics hardware
+
+	// use this call to double buffer
+	glutSwapBuffers();
+}
+
+void do_iteration( )
+{
+
+}
+
+
+
 // quad generates two triangles for each face and assigns colors
 //    to the vertices
 int Index = 0;
@@ -175,50 +316,7 @@ void drawCube(void)
 // this is where the drawing should happen
 void display( void )
 {
-	// remember to enable depth buffering when drawing in 3d
-
-	// TIP1: if you get bogged down with many matrix operations
-	// or need to perform some complexed fitting or solving
-	// it may be time to include some package like diffpac or lapack
-	// http://www.netlib.org/lapack/#_lapack_for_windows
-	// http://www.diffpack.com/
-
-	// TIP2: if you feel that GLSL is too restrictive OpenCL or CUDA can be
-	// used to generate images or other information, they support interface to OpenGL
-	// http://www.khronos.org/registry/cl/
-
-	// TIP3: prototype your operations in Matlab or Mathematica first to verify correct behavior
-	// both programs support some sort of runtime interface to C++ programs
-
-	// TIP4: check your graphics specs. you have a limited number of loop iterations, storage, registers, texture space etc.
-	
-	// TIP5: take a look at the "Assembly" generated from the opengl compilers, it might lead you to some optimizations
-	// http://http.developer.nvidia.com/Cg/cgc.html
-
-	// avoid using glTranslatex, glRotatex, push and pop
-	// pass your own view matrix to the shader directly
-	// refer to the latest OpenGL documentation for implementation details
-
-	// PROTIP1: You can access the depth buffer value and screen location at each fragment
-	// in the fragment shader, go wild
-
-	// PROTIP2: Render stuff to texture, then run filters on the texture in a second pass to 
-	// produce cool effects
     glClear( GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT );     // clear the window
-
-	// PROTIP4: Do not set the near and far plane too far appart!
-	// depth buffers do not have unlimited resolution
-	// surfaces will start to fight as they come nearer to each other
-	// if the planes are too far appart (quantization errors :(   )
-
-	// PROTIP5: If you must have extreme distances, use multiple render passes
-	// which divide the entire scene into adjacent viewing volumes
-	// render far away volumes first
-	// also scale your objects appropriatly, dont use scales at the upper or lower bounds
-	// of floating point precision
-
-	// WARNING1: I believe Angel::transpose(...) does not transpose a mat4, but just returns
-	// an identical matrix, can anyone verify this?
 	Angel::mat4 perspectiveMat = Angel::Perspective((GLfloat)45.0, (GLfloat)width/(GLfloat)height, (GLfloat)0.1, (GLfloat) 100.0);
 
 	float viewMatrixf[16];
@@ -233,7 +331,7 @@ void display( void )
 	viewMatrixf[11] = perspectiveMat[3][2];viewMatrixf[15] = perspectiveMat[3][3];
 	
 	Angel::mat4 modelMat = Angel::identity();
-	modelMat = modelMat * Angel::Translate(0.0, 0.0, -2.0f) * Angel::RotateY(45.0f) * Angel::RotateX(35.0f);
+	modelMat = modelMat * Angel::Translate(-(xMax+xMin)/2, -(yMax+yMin)/2, - sqrt(pow(xMax-xMin,2)+pow(yMax-yMin,2)+pow(zMax-zMin,2))) * Angel::RotateY(0.0f) * Angel::RotateX(0.0f);
 	float modelMatrixf[16];
 	modelMatrixf[0] = modelMat[0][0];modelMatrixf[4] = modelMat[0][1];
 	modelMatrixf[1] = modelMat[1][0];modelMatrixf[5] = modelMat[1][1];
@@ -250,13 +348,8 @@ void display( void )
 	glUniformMatrix4fv( modelMatrix, 1, GL_FALSE, modelMatrixf );
 	GLuint viewMatrix = glGetUniformLocationARB(program, "projection_matrix");
 	glUniformMatrix4fv( viewMatrix, 1, GL_FALSE, viewMatrixf);
-
-	drawCube();
-    glFlush(); // force output to graphics hardware
-
-	// use this call to double buffer
-	glutSwapBuffers();
-	// you can implement your own buffers with textures
+	readVertexAndFaceFromFile(1);
+	drawFile();
 }
 
 //----------------------------------------------------------------------------
@@ -267,7 +360,7 @@ void keyboard( unsigned char key, int x, int y )
     switch ( key ) 
 	{
 		case 'q':
-			readFile(1);
+			readFile(2);
 			break;
 		case 033:
 			exit( EXIT_SUCCESS );
@@ -285,6 +378,8 @@ int main( int argc, char **argv )
     glutInitWindowSize( 512, 512 );
 	width = 512;
 	height = 512;
+	ll->value = 'F';
+	ll->next = NULL;
     // If you are using freeglut, the next two lines will check if 
     // the code is truly 3.2. Otherwise, comment them out
     
@@ -297,7 +392,7 @@ int main( int argc, char **argv )
 
 	// create window
 	// opengl can be incorperated into other packages like wxwidgets, fltoolkit, etc.
-    glutCreateWindow( "Color Cube" );
+    glutCreateWindow( "HW3 -- Hao" );
 
 	// init glew
     glewInit();
