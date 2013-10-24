@@ -183,8 +183,9 @@ void readFile(int index)
 }
 
 //generate the drawing buffer for drawing, then draw it (actually, everything related to drawing is drawn here)
-void drawFile()
+void drawFile(int fileIndex)
 {
+	readVertexAndFaceFromFile(fileIndex);
 	glPolygonMode( GL_FRONT_AND_BACK, GL_LINE );
 	for(int i = 0, j = 0; i < countOfFace*3; i=i+3)
 	{
@@ -201,13 +202,12 @@ void drawFile()
     glBufferSubData( GL_ARRAY_BUFFER, sizeof(pointsBuf), sizeof(colorsBuf), colorsBuf );
 
 	glEnable( GL_DEPTH_TEST );
-	
     glDrawArrays( GL_TRIANGLES, 0, countOfFace*3 );
 	glDisable( GL_DEPTH_TEST ); 
 	glFlush(); // force output to graphics hardware
 
 	// use this call to double buffer
-	glutSwapBuffers();
+	 glutSwapBuffers();
 }
 
 void do_iteration( )
@@ -249,7 +249,7 @@ void generateGeometry( void )
 void display( void )
 {
     glClear( GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT );     // clear the window
-	Angel::mat4 perspectiveMat = Angel::Perspective((GLfloat)45.0, (GLfloat)width/(GLfloat)height, (GLfloat)0.1, (GLfloat) 100.0);
+	Angel::mat4 perspectiveMat = Angel::Perspective((GLfloat)45.0, (GLfloat)width/(GLfloat)height, (GLfloat)0.1, (GLfloat) 1000.0);
 
 	float viewMatrixf[16];
 	viewMatrixf[0] = perspectiveMat[0][0];viewMatrixf[4] = perspectiveMat[0][1];
@@ -280,10 +280,45 @@ void display( void )
 	glUniformMatrix4fv( modelMatrix, 1, GL_FALSE, modelMatrixf );
 	GLuint viewMatrix = glGetUniformLocationARB(program, "projection_matrix");
 	glUniformMatrix4fv( viewMatrix, 1, GL_FALSE, viewMatrixf);
-	readVertexAndFaceFromFile(0);
-	drawFile();
-}
+	drawFile(0);
 
+}
+void myDisplay( int fileIndex )
+{
+	Angel::mat4 perspectiveMat = Angel::Perspective((GLfloat)45.0, (GLfloat)width/(GLfloat)height, (GLfloat)0.1, (GLfloat) 1000.0);
+
+	float viewMatrixf[16];
+	viewMatrixf[0] = perspectiveMat[0][0];viewMatrixf[4] = perspectiveMat[0][1];
+	viewMatrixf[1] = perspectiveMat[1][0];viewMatrixf[5] = perspectiveMat[1][1];
+	viewMatrixf[2] = perspectiveMat[2][0];viewMatrixf[6] = perspectiveMat[2][1];
+	viewMatrixf[3] = perspectiveMat[3][0];viewMatrixf[7] = perspectiveMat[3][1];
+
+	viewMatrixf[8] = perspectiveMat[0][2];viewMatrixf[12] = perspectiveMat[0][3];
+	viewMatrixf[9] = perspectiveMat[1][2];viewMatrixf[13] = perspectiveMat[1][3];
+	viewMatrixf[10] = perspectiveMat[2][2];viewMatrixf[14] = perspectiveMat[2][3];
+	viewMatrixf[11] = perspectiveMat[3][2];viewMatrixf[15] = perspectiveMat[3][3];
+	
+	Angel::mat4 modelMat = Angel::identity();
+	modelMat = modelMat * Angel::Translate(-(xMax+xMin)/2, -(yMax+yMin)/2, - sqrt(pow(xMax-xMin,2)+pow(yMax-yMin,2)+pow(zMax-zMin,2))) * Angel::RotateY(90.0f) * Angel::RotateX(0.0f);
+	float modelMatrixf[16];
+	modelMatrixf[0] = modelMat[0][0];modelMatrixf[4] = modelMat[0][1];
+	modelMatrixf[1] = modelMat[1][0];modelMatrixf[5] = modelMat[1][1];
+	modelMatrixf[2] = modelMat[2][0];modelMatrixf[6] = modelMat[2][1];
+	modelMatrixf[3] = modelMat[3][0];modelMatrixf[7] = modelMat[3][1];
+
+	modelMatrixf[8] = modelMat[0][2];modelMatrixf[12] = modelMat[0][3];
+	modelMatrixf[9] = modelMat[1][2];modelMatrixf[13] = modelMat[1][3];
+	modelMatrixf[10] = modelMat[2][2];modelMatrixf[14] = modelMat[2][3];
+	modelMatrixf[11] = modelMat[3][2];modelMatrixf[15] = modelMat[3][3];
+	
+	// set up projection matricies
+	GLuint modelMatrix = glGetUniformLocationARB(program, "model_matrix");
+	glUniformMatrix4fv( modelMatrix, 1, GL_FALSE, modelMatrixf );
+	GLuint viewMatrix = glGetUniformLocationARB(program, "projection_matrix");
+	glUniformMatrix4fv( viewMatrix, 1, GL_FALSE, viewMatrixf);
+	drawFile(fileIndex);
+
+}
 //----------------------------------------------------------------------------
 
 // keyboard handler
@@ -292,8 +327,14 @@ void keyboard( unsigned char key, int x, int y )
     switch ( key ) 
 	{
 		case 'q':
-			readFile(2);
+			//readVertexAndFaceFromFile(0);
+			myDisplay(0);
 			break;
+		case 'w':
+			//readVertexAndFaceFromFile(1);
+			myDisplay(1);
+			break;
+
 		case 033:
 			exit( EXIT_SUCCESS );
 			break;
@@ -312,13 +353,8 @@ int main( int argc, char **argv )
 	height = 512;
 	ll->value = 'F';
 	ll->next = NULL;
-    // If you are using freeglut, the next two lines will check if 
-    // the code is truly 3.2. Otherwise, comment them out
     
-	// should run a test here 
-	// with different cases
-	// this is a good time to find out information about
-	// your graphics hardware before you allocate any memory
+
     glutInitContextVersion( 3, 1 );
     glutInitContextProfile( GLUT_CORE_PROFILE );
 
