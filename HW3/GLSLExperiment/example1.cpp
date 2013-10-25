@@ -289,8 +289,12 @@ void drawCylinder( void )//int xRot, int yRot, int zRot)
 
 	modelMat = modelMat * Angel::Translate(currentPoint.x , currentPoint.y , currentPoint.z) * Angel::RotateZ(currentAngle.z) * Angel::RotateY(currentAngle.y-90.0f) * Angel::RotateX(currentAngle.x);
 	
+	currentAngle.x = 90;
+	currentAngle.y = 0;
+	currentAngle.z = 0;
 	// update currentPoint now
 	currentPoint += Angel::identity() * Angel::RotateZ(currentAngle.z) * Angel::RotateY(currentAngle.y) * Angel::RotateX(currentAngle.x)*point4(0,1.0f,0,1);
+	currentAngle.w = 1.0f;
 
 	float modelMatrixf[16];
 	modelMatrixf[0] = modelMat[0][0];modelMatrixf[4] = modelMat[0][1];
@@ -404,10 +408,11 @@ void drawTree( int fileIndex)
 	stack<point4> currentPointHistory;
 	stack<angle4> currentAngleHistory;
 	do_iteration(fileIndex);
+	//get_count();
 	linkList cursor = ll->next;
 	currentPoint.y = -3;
 	currentPoint.x = RandomNumber(-3, 3);
-	currentPoint.z = RandomNumber(-70, -10);
+	currentPoint.z = RandomNumber(-50, -1);
 	currentPoint.w = 1.0f;
 	drawSphere();
 	while(cursor != NULL)
@@ -416,6 +421,7 @@ void drawTree( int fileIndex)
 		{
 			case 'F':
 				drawCylinder();
+				drawSphere();
 				break;
 			case '+':
 				currentAngle.x += rotaionX;
@@ -545,7 +551,7 @@ void myDisplay( int fileIndex )
 }
 void normalize( void )
 {
-	static float var = 0.05; 
+	static float var = 0.01; 
 	float ratio = (xMax[0]-xMin[0])/(xMax[1]-xMin[1])*var;
 	for(int i = 0; i < countOfFace[0]*3; i++)
 	{
