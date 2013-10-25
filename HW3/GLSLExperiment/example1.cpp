@@ -111,7 +111,7 @@ void plyFileLoad(int fileIndex)
 	for(int j = 0; j < countOfVertex[fileIndex]; j++)
 	{	//read each vertex
 		
-		fscanf(inStream,"%f %f %f", &x, &y, &z);
+		fscanf(inStream,"%f %f %f", &z, &x, &y);
 		if(j == 0)
 		{
 			xMax[fileIndex] = xMin[fileIndex] = x;
@@ -240,7 +240,7 @@ void do_iteration(int index)
 {
 	readFile(index);
 	linkList cursor;
-	for(int i = 1; i < iteration; i++)
+	for(int i = iteration - 1; i < iteration; i++)
 	{
 		cursor = ll->next;
 		while(cursor != NULL)
@@ -331,7 +331,9 @@ void display( void )
 	viewMatrixf[11] = perspectiveMat[3][2];viewMatrixf[15] = perspectiveMat[3][3];
 	
 	Angel::mat4 modelMat = Angel::identity();
-	modelMat = modelMat * Angel::Translate(-(xMax[0]+xMin[0])/2, -(yMax[0]+yMin[0])/2, - sqrt(pow(xMax[0]-xMin[0],2)+pow(yMax[0]-yMin[0],2)+pow(zMax[0]-zMin[0],2))) * Angel::RotateY(90.0f) * Angel::RotateX(0.0f);
+	modelMat = modelMat * Angel::Translate(0, 0, -10) * Angel::RotateZ(0.0f) * Angel::RotateY(0.0f) * Angel::RotateX(0.0f);
+	modelMat = modelMat * Angel::Scale(0.05,0.5,0.05);
+
 	float modelMatrixf[16];
 	modelMatrixf[0] = modelMat[0][0];modelMatrixf[4] = modelMat[0][1];
 	modelMatrixf[1] = modelMat[1][0];modelMatrixf[5] = modelMat[1][1];
@@ -362,28 +364,17 @@ void display( void )
     glDrawArrays( GL_TRIANGLES, 0, countOfFace[fileIndex]*3 );
 	glDisable( GL_DEPTH_TEST ); 
 
-	myDisplay( 0 );
+	myDisplay(1);
 	
 
 }
 void myDisplay( int fileIndex )
 {
-	//glClear( GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT );     // clear the window
-	Angel::mat4 perspectiveMat = Angel::Perspective((GLfloat)45.0, (GLfloat)width/(GLfloat)height, (GLfloat)0.1, (GLfloat) 1000.0);
-
-	float viewMatrixf[16];
-	viewMatrixf[0] = perspectiveMat[0][0];viewMatrixf[4] = perspectiveMat[0][1];
-	viewMatrixf[1] = perspectiveMat[1][0];viewMatrixf[5] = perspectiveMat[1][1];
-	viewMatrixf[2] = perspectiveMat[2][0];viewMatrixf[6] = perspectiveMat[2][1];
-	viewMatrixf[3] = perspectiveMat[3][0];viewMatrixf[7] = perspectiveMat[3][1];
-
-	viewMatrixf[8] = perspectiveMat[0][2];viewMatrixf[12] = perspectiveMat[0][3];
-	viewMatrixf[9] = perspectiveMat[1][2];viewMatrixf[13] = perspectiveMat[1][3];
-	viewMatrixf[10] = perspectiveMat[2][2];viewMatrixf[14] = perspectiveMat[2][3];
-	viewMatrixf[11] = perspectiveMat[3][2];viewMatrixf[15] = perspectiveMat[3][3];
-	
 	Angel::mat4 modelMat = Angel::identity();
-	modelMat = modelMat * Angel::Translate(-(xMax[fileIndex]+xMin[fileIndex])/2-1, -(yMax[fileIndex]+yMin[fileIndex])/2, - sqrt(pow(xMax[fileIndex]-xMin[fileIndex],2)+pow(yMax[fileIndex]-yMin[fileIndex],2)+pow(zMax[fileIndex]-zMin[fileIndex],2))) * Angel::RotateY(45.0f) * Angel::RotateX(0.0f);
+
+	modelMat = modelMat * Angel::Translate(0, -(yMax[0]-yMin[0])/2, -10) * Angel::RotateY(0.0f) * Angel::RotateX(0.0f);
+	modelMat = modelMat * Angel::Scale((xMax[0]-xMin[0])/(xMax[1]-xMin[1])*0.05,(xMax[0]-xMin[0])/(xMax[1]-xMin[1])*0.05,(xMax[0]-xMin[0])/(xMax[1]-xMin[1])*0.05);
+
 	float modelMatrixf[16];
 	modelMatrixf[0] = modelMat[0][0];modelMatrixf[4] = modelMat[0][1];
 	modelMatrixf[1] = modelMat[1][0];modelMatrixf[5] = modelMat[1][1];
@@ -398,8 +389,7 @@ void myDisplay( int fileIndex )
 	// set up projection matricies
 	GLuint modelMatrix = glGetUniformLocationARB(program, "model_matrix");
 	glUniformMatrix4fv( modelMatrix, 1, GL_FALSE, modelMatrixf );
-	GLuint viewMatrix = glGetUniformLocationARB(program, "projection_matrix");
-	glUniformMatrix4fv( viewMatrix, 1, GL_FALSE, viewMatrixf);
+
 	drawFile(fileIndex);
 
 }
@@ -455,6 +445,10 @@ int main( int argc, char **argv )
     generateGeometry();
 	plyFileLoad(0);
 	plyFileLoad(1);
+
+	printf("%f\n", xMax[0]-xMin[0]);
+	printf("length = %f\n", zMax[0]-zMin[0]);
+	printf("%f", xMax[1]-xMin[1]);
 	// assign handlers
     glutDisplayFunc( display );
     glutKeyboardFunc( keyboard );
