@@ -23,6 +23,7 @@ float RandomNumber(float , float );
 void drawSphere( void );
 void drawCylinder( void );
 void flush( void );
+void drawForest( void );
 
 typedef Angel::vec4  color4;
 typedef Angel::vec4  point4;
@@ -59,6 +60,7 @@ char plyFileName[2][15] = {"cylinder.ply","sphere.ply"};
 
 static int countOfVertex[2];
 static int countOfFace[2]; 
+
 //store points from ply files
 point4 points[200];
 //store mesh information from ply files
@@ -252,8 +254,8 @@ void drawCylinder( void )
 	modelMat = modelMat * Angel::Translate(currentPoint.x , currentPoint.y , currentPoint.z) * Angel::RotateZ(currentAngle.z) * Angel::RotateY(currentAngle.y+90.0f) * Angel::RotateX(currentAngle.x);
 
 	// update currentPoint now
-	point4 increament = Angel::identity() * Angel::RotateZ(currentAngle.z) * Angel::RotateY(currentAngle.y+90.0f) * Angel::RotateX(currentAngle.x)*point4(0,1.0f,0,1);
-	currentPoint += increament;//Angel::identity() * Angel::RotateZ(currentAngle.z) * Angel::RotateY(currentAngle.y) * Angel::RotateX(currentAngle.x)*point4(0,1.0f,0,1);
+	//point4 increament = Angel::identity() * Angel::RotateZ(currentAngle.z) * Angel::RotateY(currentAngle.y+90.0f) * Angel::RotateX(currentAngle.x)*point4(0,1.0f,0,1);
+	currentPoint = modelMat*point4(0,1.0f,0,1);//increament;//Angel::identity() * Angel::RotateZ(currentAngle.z) * Angel::RotateY(currentAngle.y) * Angel::RotateX(currentAngle.x)*point4(0,1.0f,0,1);
 	//currentAngle.w = 1.0f;
 	currentPoint.w = 1.0f;
 
@@ -365,7 +367,7 @@ float RandomNumber(float Min, float Max)
 }
 void drawTree( int fileIndex)
 {
-	glClear( GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT );     // clear the window
+	//glClear( GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT );     // clear the window
 	stack<point4> currentPointHistory;
 	stack<angle4> currentAngleHistory;
 	do_iteration(fileIndex);
@@ -375,9 +377,9 @@ void drawTree( int fileIndex)
 	currentAngle.y = 0;
 	currentAngle.z = 0;
 
-	currentPoint.y = -70;
+	currentPoint.y = -10;
 	currentPoint.x = RandomNumber(-3, 3);
-	currentPoint.z = RandomNumber(-500, -125);
+	currentPoint.z = RandomNumber(-200, -25);
 	currentPoint.w = 1.0f;
 	drawSphere();
 	while(cursor != NULL)
@@ -426,10 +428,15 @@ void drawTree( int fileIndex)
 		}
 		cursor = cursor->next;
 	}
-
-	flush();
-
 }
+void drawForest( void )
+{
+	for(int i = 0; i < 5; i++)
+	{
+		drawTree(i);
+	}
+}
+
 void flush( void )
 {
 	glFlush();
@@ -458,8 +465,9 @@ void display( void )
 	GLuint viewMatrix = glGetUniformLocationARB(program, "projection_matrix");
 	glUniformMatrix4fv( viewMatrix, 1, GL_FALSE, viewMatrixf);
 	/* End of setup view matrix*/
-
-	drawTree(0);
+	glClear( GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT );     // clear the window
+	drawTree(fileIndex);
+	flush();
 }
 void normalize( void )
 {
@@ -499,8 +507,16 @@ void keyboard( unsigned char key, int x, int y )
 {
     switch ( key ) 
 	{
-		case 'a':
-			drawTree(4);
+		case 'r':
+			fileIndex = rand() % 5;
+			glClear( GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT );     // clear the window
+			drawTree(fileIndex);
+			flush();
+			break;
+		case 'f':
+			glClear( GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT );     // clear the window
+			drawForest();
+			flush();
 			break;
 		case 033:
 			exit( EXIT_SUCCESS );
@@ -516,8 +532,8 @@ int main( int argc, char **argv )
     glutInit( &argc, argv );
     glutInitDisplayMode( GLUT_RGBA | GLUT_DOUBLE | GLUT_DEPTH );
     glutInitWindowSize( 800, 800 );
-	width = 512;
-	height = 512;
+	width = 800;
+	height = 800;
 	/* initial my linkList, and the first node is not used, so just store 'F' in it for fun */
 	ll->value = 'F';
 	ll->next = NULL;
@@ -542,7 +558,7 @@ int main( int argc, char **argv )
 	/* initial current variables */
 	currentPoint.w = 1.0f;
 	currentAngle.w = 1.0f;
-
+	fileIndex = 0;
 
 	// assign handlers
     glutDisplayFunc( display );
