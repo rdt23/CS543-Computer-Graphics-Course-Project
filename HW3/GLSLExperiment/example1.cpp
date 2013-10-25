@@ -23,7 +23,7 @@ void normalize( void );
 void drawTree( int );
 float RandomNumber(float , float );
 void drawSphere( void );
-void drawCylinder(int, int , int );
+void drawCylinder( void );//int, int , int );
 
 typedef Angel::vec4  color4;
 typedef Angel::vec4  point4;
@@ -277,22 +277,21 @@ void drawSphere( void )
 	glEnable( GL_DEPTH_TEST );
     glDrawArrays( GL_TRIANGLES, 0, countOfFace[1]*3 );
 	glDisable( GL_DEPTH_TEST );
-
-	glFlush(); // force output to graphics hardware
-
-	// use this call to double buffer
-	 glutSwapBuffers();
 }
-void drawCylinder(int xRot, int yRot, int zRot)
+void drawCylinder( void )//int xRot, int yRot, int zRot)
 {
-	currentAngle.x += 1.0*xRot*rotaionX;
-	currentAngle.y += 1.0*yRot*rotaionY;
-	currentAngle.z += 1.0*zRot*rotaionZ;
+	//currentAngle.x += 1.0*xRot*rotaionX;
+	//currentAngle.y += 1.0*yRot*rotaionY;
+	//currentAngle.z += 1.0*zRot*rotaionZ;
 
 	glPolygonMode( GL_FRONT_AND_BACK, GL_LINE );
 	Angel::mat4 modelMat = Angel::identity();
 
 	modelMat = modelMat * Angel::Translate(currentPoint.x , currentPoint.y , currentPoint.z) * Angel::RotateZ(currentAngle.z) * Angel::RotateY(currentAngle.y) * Angel::RotateX(currentAngle.x);
+	
+	// update currentPoint now
+	currentPoint = modelMat*currentPoint;
+
 	float modelMatrixf[16];
 	modelMatrixf[0] = modelMat[0][0];modelMatrixf[4] = modelMat[0][1];
 	modelMatrixf[1] = modelMat[1][0];modelMatrixf[5] = modelMat[1][1];
@@ -318,6 +317,8 @@ void drawCylinder(int xRot, int yRot, int zRot)
 	glEnable( GL_DEPTH_TEST );
     glDrawArrays( GL_TRIANGLES, 0, countOfFace[0]*3 );
 	glDisable( GL_DEPTH_TEST );
+
+
 }
 void do_iteration(int index)
 {
@@ -402,22 +403,61 @@ void drawTree( int fileIndex)
 	glClear( GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT );     // clear the window
 	stack<point4> currentPointHistory;
 	stack<angle4> currentAngleHistory;
-	linkList cursor = ll->next;
 	do_iteration(fileIndex);
-	currentPoint.y = -2;
+	linkList cursor = ll->next;
+	currentPoint.y = -1;
 	currentPoint.x = RandomNumber(-3, 3);
-	currentPoint.z = RandomNumber(-20, -4);
+	currentPoint.z = RandomNumber(-20, -5);
+	currentPoint.w = 1.0f;
 	drawSphere();
 	while(cursor != NULL)
 	{
 		switch(cursor->value)
 		{
 			case 'F':
-
+				drawCylinder();
+				break;
+			case '+':
+				currentAngle.x += rotaionX;
+				break;
+			case '-':
+				currentAngle.x -= rotaionX;
+				break;
+			case '&':
+				currentAngle.y += rotaionY;
+				break;
+			case '^':
+				currentAngle.y -= rotaionY;
+				break;
+			case '\\':
+				currentAngle.z += rotaionZ;
+				break;
+			case '/':
+				currentAngle.z -= rotaionZ;
+				break;
+			case '[':
+				currentPointHistory.push(currentPoint);
+				currentAngleHistory.push(currentAngle);
+				break;
+			case ']':
+				currentPoint = currentPointHistory.top();
+				currentAngle = currentAngleHistory.top();
+				currentPointHistory.pop();
+				currentAngleHistory.pop();
+				break;
+			case '|':
+				currentAngle.x = -currentAngle.x;
+				currentAngle.y = -currentAngle.y;
+				currentAngle.z = -currentAngle.z;
+				break;
+			default:
 				break;
 		}
 		cursor = cursor->next;
 	}
+
+	glFlush();
+	glutSwapBuffers();
 
 }
 //----------------------------------------------------------------------------
@@ -587,7 +627,8 @@ int main( int argc, char **argv )
 	normalize();
 	/* initialize random seed: */
 	srand (time(NULL));
-
+	currentPoint.w = 1.0f;
+	currentAngle.w = 1.0f;
 
 	// assign handlers
     glutDisplayFunc( display );
