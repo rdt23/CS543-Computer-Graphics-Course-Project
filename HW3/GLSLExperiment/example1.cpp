@@ -287,10 +287,10 @@ void drawCylinder( void )//int xRot, int yRot, int zRot)
 	glPolygonMode( GL_FRONT_AND_BACK, GL_LINE );
 	Angel::mat4 modelMat = Angel::identity();
 
-	modelMat = modelMat * Angel::Translate(currentPoint.x , currentPoint.y , currentPoint.z) * Angel::RotateZ(currentAngle.z) * Angel::RotateY(currentAngle.y) * Angel::RotateX(currentAngle.x);
+	modelMat = modelMat * Angel::Translate(currentPoint.x , currentPoint.y , currentPoint.z) * Angel::RotateZ(currentAngle.z) * Angel::RotateY(currentAngle.y-90.0f) * Angel::RotateX(currentAngle.x);
 	
 	// update currentPoint now
-	currentPoint = modelMat*currentPoint;
+	currentPoint += Angel::identity() * Angel::RotateZ(currentAngle.z) * Angel::RotateY(currentAngle.y) * Angel::RotateX(currentAngle.x)*point4(0,1.0f,0,1);
 
 	float modelMatrixf[16];
 	modelMatrixf[0] = modelMat[0][0];modelMatrixf[4] = modelMat[0][1];
@@ -324,7 +324,7 @@ void do_iteration(int index)
 {
 	readFile(index);
 	linkList cursor;
-	for(int i = iteration ; i < iteration; i++) // from 1
+	for(int i = 1/*iteration*/ ; i < iteration; i++) // from 1
 	{
 		cursor = ll->next;
 		while(cursor != NULL)
@@ -405,9 +405,9 @@ void drawTree( int fileIndex)
 	stack<angle4> currentAngleHistory;
 	do_iteration(fileIndex);
 	linkList cursor = ll->next;
-	currentPoint.y = -1;
+	currentPoint.y = -3;
 	currentPoint.x = RandomNumber(-3, 3);
-	currentPoint.z = RandomNumber(-20, -5);
+	currentPoint.z = RandomNumber(-70, -10);
 	currentPoint.w = 1.0f;
 	drawSphere();
 	while(cursor != NULL)
@@ -522,7 +522,7 @@ void myDisplay( int fileIndex )
 	//glClear( GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT );     // clear the window
 	Angel::mat4 modelMat = Angel::identity();
 
-	modelMat = modelMat * Angel::Translate(0, -(yMax[0]-yMin[0])/2, -1) * Angel::RotateY(0.0f) * Angel::RotateX(0.0f);
+	modelMat = modelMat * Angel::Translate(0, 0, -1) * Angel::RotateY(0.0f) * Angel::RotateX(0.0f);
 	//modelMat = modelMat * Angel::Scale((xMax[0]-xMin[0])/(xMax[1]-xMin[1])*0.05,(xMax[0]-xMin[0])/(xMax[1]-xMin[1])*0.05,(xMax[0]-xMin[0])/(xMax[1]-xMin[1])*0.05);
 
 	float modelMatrixf[16];
@@ -550,14 +550,14 @@ void normalize( void )
 	for(int i = 0; i < countOfFace[0]*3; i++)
 	{
 		cylinderPointsBuf[i].x *= var;
-		cylinderPointsBuf[i].y *= 0.5;
+		cylinderPointsBuf[i].y = cylinderPointsBuf[i].y * 0.5 + 0.5;
 		cylinderPointsBuf[i].z *= var;
 		
 	}
 	xMax[0] *= var;
 	xMin[0] *= var;
-	yMax[0] *= 0.5;
-	yMin[0] *= 0.5;
+	yMax[0] = 1;
+	yMin[0] = 0;
 	zMax[0] *= var;
 	zMin[0] *= var;
 
@@ -589,7 +589,7 @@ void keyboard( unsigned char key, int x, int y )
 		case 'w':
 			glClear( GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT );
 			//readVertexAndFaceFromFile(1);
-			myDisplay(1);
+			myDisplay(0);
 			break;
 		case 'a':
 			drawTree(0);
