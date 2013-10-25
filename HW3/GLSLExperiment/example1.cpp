@@ -287,14 +287,14 @@ void drawCylinder( void )//int xRot, int yRot, int zRot)
 	glPolygonMode( GL_FRONT_AND_BACK, GL_LINE );
 	Angel::mat4 modelMat = Angel::identity();
 
-	modelMat = modelMat * Angel::Translate(currentPoint.x , currentPoint.y , currentPoint.z) * Angel::RotateZ(currentAngle.z) * Angel::RotateY(currentAngle.y-90.0f) * Angel::RotateX(currentAngle.x);
+	modelMat = modelMat * Angel::Translate(currentPoint.x , currentPoint.y , currentPoint.z) * Angel::RotateZ(currentAngle.z) * Angel::RotateY(currentAngle.y+90.0f) * Angel::RotateX(currentAngle.x);
 	/*
 	currentAngle.x = 90;
 	currentAngle.y = 0;
 	currentAngle.z = 0;
 	*/
 	// update currentPoint now
-	point4 increament = Angel::identity() * Angel::RotateZ(currentAngle.z) * Angel::RotateY(currentAngle.y) * Angel::RotateX(currentAngle.x)*point4(0,1.0f,0,1);
+	point4 increament = Angel::identity() * Angel::RotateZ(currentAngle.z) * Angel::RotateY(currentAngle.y+90.0f) * Angel::RotateX(currentAngle.x)*point4(0,1.0f,0,1);
 	currentPoint += increament;//Angel::identity() * Angel::RotateZ(currentAngle.z) * Angel::RotateY(currentAngle.y) * Angel::RotateX(currentAngle.x)*point4(0,1.0f,0,1);
 	//currentAngle.w = 1.0f;
 	currentPoint.w = 1.0f;
@@ -417,9 +417,9 @@ void drawTree( int fileIndex)
 	currentAngle.y = 0;
 	currentAngle.z = 0;
 
-	currentPoint.y = -2;
+	currentPoint.y = -1;
 	currentPoint.x = RandomNumber(-3, 3);
-	currentPoint.z = RandomNumber(-50, -4);
+	currentPoint.z = RandomNumber(-30, -0);
 	currentPoint.w = 1.0f;
 	drawSphere();
 	while(cursor != NULL)
@@ -528,7 +528,7 @@ void display( void )
 
 	myDisplay(1);
 	*/
-	drawTree(4);
+	drawTree(3);
 }
 void myDisplay( int fileIndex )
 {
