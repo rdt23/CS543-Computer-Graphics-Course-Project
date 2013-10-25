@@ -55,7 +55,7 @@ char start = 'F';
 char formula[32];
 linkList ll = (linkNode*)malloc(sizeof(linkNode));
 
-char fileName[4][10] = {"lsys1.txt","lsys2.txt","lsys3.txt","lsys4.txt"};
+char fileName[5][10] = {"lsys1.txt","lsys2.txt","lsys3.txt","lsys4.txt","lsys5.txt"};
 char plyFileName[2][15] = {"cylinder.ply","sphere.ply"};
 
 static int countOfVertex[2];
@@ -288,13 +288,16 @@ void drawCylinder( void )//int xRot, int yRot, int zRot)
 	Angel::mat4 modelMat = Angel::identity();
 
 	modelMat = modelMat * Angel::Translate(currentPoint.x , currentPoint.y , currentPoint.z) * Angel::RotateZ(currentAngle.z) * Angel::RotateY(currentAngle.y-90.0f) * Angel::RotateX(currentAngle.x);
-	
+	/*
 	currentAngle.x = 90;
 	currentAngle.y = 0;
 	currentAngle.z = 0;
+	*/
 	// update currentPoint now
-	currentPoint += Angel::identity() * Angel::RotateZ(currentAngle.z) * Angel::RotateY(currentAngle.y) * Angel::RotateX(currentAngle.x)*point4(0,1.0f,0,1);
-	currentAngle.w = 1.0f;
+	point4 increament = Angel::identity() * Angel::RotateZ(currentAngle.z) * Angel::RotateY(currentAngle.y) * Angel::RotateX(currentAngle.x)*point4(0,1.0f,0,1);
+	currentPoint += increament;//Angel::identity() * Angel::RotateZ(currentAngle.z) * Angel::RotateY(currentAngle.y) * Angel::RotateX(currentAngle.x)*point4(0,1.0f,0,1);
+	//currentAngle.w = 1.0f;
+	currentPoint.w = 1.0f;
 
 	float modelMatrixf[16];
 	modelMatrixf[0] = modelMat[0][0];modelMatrixf[4] = modelMat[0][1];
@@ -410,9 +413,13 @@ void drawTree( int fileIndex)
 	do_iteration(fileIndex);
 	//get_count();
 	linkList cursor = ll->next;
-	currentPoint.y = -3;
+	currentAngle.x = 0;
+	currentAngle.y = 0;
+	currentAngle.z = 0;
+
+	currentPoint.y = -2;
 	currentPoint.x = RandomNumber(-3, 3);
-	currentPoint.z = RandomNumber(-50, -1);
+	currentPoint.z = RandomNumber(-50, -4);
 	currentPoint.w = 1.0f;
 	drawSphere();
 	while(cursor != NULL)
@@ -484,7 +491,7 @@ void display( void )
 	viewMatrixf[9] = perspectiveMat[1][2];viewMatrixf[13] = perspectiveMat[1][3];
 	viewMatrixf[10] = perspectiveMat[2][2];viewMatrixf[14] = perspectiveMat[2][3];
 	viewMatrixf[11] = perspectiveMat[3][2];viewMatrixf[15] = perspectiveMat[3][3];
-	
+	/*
 	Angel::mat4 modelMat = Angel::identity();
 	modelMat = modelMat * Angel::Translate(0, 0, -1) * Angel::RotateZ(0.0f) * Angel::RotateY(0.0f) * Angel::RotateX(0.0f);
 	//modelMat = modelMat * Angel::Scale(0.05,0.5,0.05);
@@ -499,13 +506,13 @@ void display( void )
 	modelMatrixf[9] = modelMat[1][2];modelMatrixf[13] = modelMat[1][3];
 	modelMatrixf[10] = modelMat[2][2];modelMatrixf[14] = modelMat[2][3];
 	modelMatrixf[11] = modelMat[3][2];modelMatrixf[15] = modelMat[3][3];
-	
+	*/
 	// set up projection matricies
-	GLuint modelMatrix = glGetUniformLocationARB(program, "model_matrix");
-	glUniformMatrix4fv( modelMatrix, 1, GL_FALSE, modelMatrixf );
+	//GLuint modelMatrix = glGetUniformLocationARB(program, "model_matrix");
+	//glUniformMatrix4fv( modelMatrix, 1, GL_FALSE, modelMatrixf );
 	GLuint viewMatrix = glGetUniformLocationARB(program, "projection_matrix");
 	glUniformMatrix4fv( viewMatrix, 1, GL_FALSE, viewMatrixf);
-
+	/*
 	glPolygonMode( GL_FRONT_AND_BACK, GL_LINE );
 	//glBufferData( GL_ARRAY_BUFFER, sizeof(pointsBuf), pointsBuf, GL_STATIC_DRAW );
 	glBufferData( GL_ARRAY_BUFFER, sizeof(cylinderPointsBuf) + sizeof(cylinderColorsBuf), NULL, GL_STATIC_DRAW );
@@ -520,8 +527,8 @@ void display( void )
 	glDisable( GL_DEPTH_TEST ); 
 
 	myDisplay(1);
-	
-
+	*/
+	drawTree(4);
 }
 void myDisplay( int fileIndex )
 {
@@ -598,7 +605,7 @@ void keyboard( unsigned char key, int x, int y )
 			myDisplay(0);
 			break;
 		case 'a':
-			drawTree(0);
+			drawTree(4);
 			break;
 		case 033:
 			exit( EXIT_SUCCESS );
