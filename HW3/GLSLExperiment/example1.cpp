@@ -378,8 +378,31 @@ void drawTree( int fileIndex)
 	currentAngle.z = 0;
 
 	currentPoint.y = -10;
-	currentPoint.x = RandomNumber(-3, 3);
-	currentPoint.z = RandomNumber(-200, -25);
+	switch(fileIndex)
+	{
+		case 0:
+			currentPoint.x = RandomNumber(-330, 330);
+			currentPoint.z = RandomNumber(-500, -325);
+			break;
+		case 1:
+			currentPoint.x = RandomNumber(-130, 130);
+			currentPoint.z = RandomNumber(-300, -125);
+			break;
+		case 2:
+			currentPoint.x = RandomNumber(-20, 20);
+			currentPoint.z = RandomNumber(-30, -25);
+			break;
+		case 3:
+			currentPoint.x = RandomNumber(-20, -5);
+			currentPoint.z = RandomNumber(-30, -25);
+			break;
+		case 4:
+			currentPoint.x = RandomNumber(-20, 20);
+			currentPoint.z = RandomNumber(-30, -25);
+			break;
+
+	}
+
 	currentPoint.w = 1.0f;
 	drawSphere();
 	while(cursor != NULL)
@@ -466,7 +489,8 @@ void display( void )
 	glUniformMatrix4fv( viewMatrix, 1, GL_FALSE, viewMatrixf);
 	/* End of setup view matrix*/
 	glClear( GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT );     // clear the window
-	drawTree(fileIndex);
+	//drawTree(fileIndex);
+	drawTree(4);
 	flush();
 }
 void normalize( void )

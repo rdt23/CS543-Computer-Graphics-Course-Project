@@ -93,11 +93,14 @@
     <ClInclude Include="vec.h" />
   </ItemGroup>
   <ItemGroup>
+    <None Include="cylinder.ply" />
     <None Include="fshader1.glsl" />
     <None Include="lsys1.txt" />
     <None Include="lsys2.txt" />
     <None Include="lsys3.txt" />
     <None Include="lsys4.txt" />
+    <None Include="lsys5.txt" />
+    <None Include="sphere.ply" />
     <None Include="vshader1.glsl" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />

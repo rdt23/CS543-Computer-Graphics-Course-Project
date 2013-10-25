@@ -61,5 +61,14 @@
     <None Include="vshader1.glsl">
       <Filter>Resource Files</Filter>
     </None>
+    <None Include="cylinder.ply">
+      <Filter>Resource Files</Filter>
+    </None>
+    <None Include="sphere.ply">
+      <Filter>Resource Files</Filter>
+    </None>
+    <None Include="lsys5.txt">
+      <Filter>Resource Files</Filter>
+    </None>
   </ItemGroup>
 </Project>

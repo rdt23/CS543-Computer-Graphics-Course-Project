@@ -23,7 +23,7 @@
 #    character representing the left-hand side of the rule, and "R" is a sequence
 #    of characters representing the replacement string for "L".
 len: 1
-iter: 0
+iter: 1
 rot: 45 45 45
 start: F
-F: F+FF
+F: F[/F\F]\F
