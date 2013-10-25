@@ -331,8 +331,8 @@ void display( void )
 	viewMatrixf[11] = perspectiveMat[3][2];viewMatrixf[15] = perspectiveMat[3][3];
 	
 	Angel::mat4 modelMat = Angel::identity();
-	modelMat = modelMat * Angel::Translate(0, 0, -10) * Angel::RotateZ(0.0f) * Angel::RotateY(0.0f) * Angel::RotateX(0.0f);
-	modelMat = modelMat * Angel::Scale(0.05,0.5,0.05);
+	modelMat = modelMat * Angel::Translate(0, 0, -1) * Angel::RotateZ(0.0f) * Angel::RotateY(0.0f) * Angel::RotateX(0.0f);
+	//modelMat = modelMat * Angel::Scale(0.05,0.5,0.05);
 
 	float modelMatrixf[16];
 	modelMatrixf[0] = modelMat[0][0];modelMatrixf[4] = modelMat[0][1];
@@ -372,8 +372,8 @@ void myDisplay( int fileIndex )
 {
 	Angel::mat4 modelMat = Angel::identity();
 
-	modelMat = modelMat * Angel::Translate(0, -(yMax[0]-yMin[0])/2, -10) * Angel::RotateY(0.0f) * Angel::RotateX(0.0f);
-	modelMat = modelMat * Angel::Scale((xMax[0]-xMin[0])/(xMax[1]-xMin[1])*0.05,(xMax[0]-xMin[0])/(xMax[1]-xMin[1])*0.05,(xMax[0]-xMin[0])/(xMax[1]-xMin[1])*0.05);
+	modelMat = modelMat * Angel::Translate(0, -(yMax[0]-yMin[0])/2, -1) * Angel::RotateY(0.0f) * Angel::RotateX(0.0f);
+	//modelMat = modelMat * Angel::Scale((xMax[0]-xMin[0])/(xMax[1]-xMin[1])*0.05,(xMax[0]-xMin[0])/(xMax[1]-xMin[1])*0.05,(xMax[0]-xMin[0])/(xMax[1]-xMin[1])*0.05);
 
 	float modelMatrixf[16];
 	modelMatrixf[0] = modelMat[0][0];modelMatrixf[4] = modelMat[0][1];
@@ -392,6 +392,37 @@ void myDisplay( int fileIndex )
 
 	drawFile(fileIndex);
 
+}
+void normalize( void )
+{
+	static float var = 0.05; 
+	float ratio = (xMax[0]-xMin[0])/(xMax[1]-xMin[1])*var;
+	for(int i = 0; i < countOfFace[0]*3; i++)
+	{
+		cylinderPointsBuf[i].x *= var;
+		cylinderPointsBuf[i].y *= 0.5;
+		cylinderPointsBuf[i].z *= var;
+		
+	}
+	xMax[0] *= var;
+	xMin[0] *= var;
+	yMax[0] *= 0.5;
+	yMin[0] *= 0.5;
+	zMax[0] *= var;
+	zMin[0] *= var;
+
+	for(int i = 0; i < countOfFace[1]*3; i++)
+	{
+		spherePointsBuf[i].x *= ratio;
+		spherePointsBuf[i].y *= ratio;
+		spherePointsBuf[i].z *= ratio;
+	}
+	xMax[1] *= (xMax[0]-xMin[0])/(xMax[1]-xMin[1]);
+	xMin[1] = -xMax[1];
+	yMax[1] = xMax[1];
+	yMin[1] = -xMax[1];
+	zMax[1] = xMax[1];
+	zMin[1] = -xMax[1];
 }
 //----------------------------------------------------------------------------
 
@@ -445,7 +476,7 @@ int main( int argc, char **argv )
     generateGeometry();
 	plyFileLoad(0);
 	plyFileLoad(1);
-
+	normalize();
 	printf("%f\n", xMax[0]-xMin[0]);
 	printf("length = %f\n", zMax[0]-zMin[0]);
 	printf("%f", xMax[1]-xMin[1]);
