@@ -2,8 +2,9 @@
 // Generated using randomly selected vertices and bisection
 
 #include "Angel.h"
-
-
+#include <stdlib.h>     /* srand, rand */
+#include <time.h>       /* time */
+#include <stack>
 //----------------------------------------------------------------------------
 int width = 0;
 int height = 0;
@@ -11,15 +12,22 @@ int height = 0;
 // remember to prototype
 void generateGeometry( void );
 void display( void );
-void keyboard( unsigned char key, int x, int y );
-void quad( int a, int b, int c, int d );
-void colorcube(void);
-void drawCube(void);
+void keyboard( unsigned char, int, int );
 void myDisplay( int );
+void plyFileLoad(int);
+void readFile(int);
+void drawFile(int);
+void do_iteration(int);
+int get_count( void );
+void normalize( void );
+void drawTree( int );
+float RandomNumber(float , float );
+void drawSphere( void );
+void drawCylinder(int, int , int );
 
 typedef Angel::vec4  color4;
 typedef Angel::vec4  point4;
-
+typedef Angel::vec4  angle4;
 // handle to program
 GLuint program;
 
@@ -61,6 +69,9 @@ point4 spherePointsBuf[1000];
 color4 sphereColorsBuf[1000];
 point4 cylinderPointsBuf[200];
 color4 cylinderColorsBuf[200];
+
+point4 currentPoint;
+angle4 currentAngle;
 
 static int fileIndex = 0;
 float xMax[2], xMin[2], yMax[2], yMin[2], zMax[2], zMin[2];
@@ -235,12 +246,84 @@ void drawFile(int fileIndex)
 	// use this call to double buffer
 	 glutSwapBuffers();
 }
+void drawSphere( void )
+{
+	glPolygonMode( GL_FRONT_AND_BACK, GL_LINE );
+	Angel::mat4 modelMat = Angel::identity();
 
+	modelMat = modelMat * Angel::Translate(currentPoint.x , currentPoint.y , currentPoint.z) * Angel::RotateZ(0.0f) * Angel::RotateY(0.0f) * Angel::RotateX(0.0f);
+	float modelMatrixf[16];
+	modelMatrixf[0] = modelMat[0][0];modelMatrixf[4] = modelMat[0][1];
+	modelMatrixf[1] = modelMat[1][0];modelMatrixf[5] = modelMat[1][1];
+	modelMatrixf[2] = modelMat[2][0];modelMatrixf[6] = modelMat[2][1];
+	modelMatrixf[3] = modelMat[3][0];modelMatrixf[7] = modelMat[3][1];
+
+	modelMatrixf[8] = modelMat[0][2];modelMatrixf[12] = modelMat[0][3];
+	modelMatrixf[9] = modelMat[1][2];modelMatrixf[13] = modelMat[1][3];
+	modelMatrixf[10] = modelMat[2][2];modelMatrixf[14] = modelMat[2][3];
+	modelMatrixf[11] = modelMat[3][2];modelMatrixf[15] = modelMat[3][3];
+	
+	// set up projection matricies
+	GLuint modelMatrix = glGetUniformLocationARB(program, "model_matrix");
+	glUniformMatrix4fv( modelMatrix, 1, GL_FALSE, modelMatrixf );
+
+	glBufferData( GL_ARRAY_BUFFER, sizeof(spherePointsBuf) + sizeof(sphereColorsBuf), NULL, GL_STATIC_DRAW );
+	glBufferSubData( GL_ARRAY_BUFFER, 0, sizeof(spherePointsBuf), spherePointsBuf );
+	glBufferSubData( GL_ARRAY_BUFFER, sizeof(spherePointsBuf), sizeof(sphereColorsBuf), sphereColorsBuf );
+	GLuint vColor = glGetAttribLocation( program, "vColor" ); 
+	glEnableVertexAttribArray( vColor );
+	glVertexAttribPointer( vColor, 4, GL_FLOAT, GL_FALSE, 0, BUFFER_OFFSET(sizeof(spherePointsBuf)) );
+
+	glEnable( GL_DEPTH_TEST );
+    glDrawArrays( GL_TRIANGLES, 0, countOfFace[1]*3 );
+	glDisable( GL_DEPTH_TEST );
+
+	glFlush(); // force output to graphics hardware
+
+	// use this call to double buffer
+	 glutSwapBuffers();
+}
+void drawCylinder(int xRot, int yRot, int zRot)
+{
+	currentAngle.x += 1.0*xRot*rotaionX;
+	currentAngle.y += 1.0*yRot*rotaionY;
+	currentAngle.z += 1.0*zRot*rotaionZ;
+
+	glPolygonMode( GL_FRONT_AND_BACK, GL_LINE );
+	Angel::mat4 modelMat = Angel::identity();
+
+	modelMat = modelMat * Angel::Translate(currentPoint.x , currentPoint.y , currentPoint.z) * Angel::RotateZ(currentAngle.z) * Angel::RotateY(currentAngle.y) * Angel::RotateX(currentAngle.x);
+	float modelMatrixf[16];
+	modelMatrixf[0] = modelMat[0][0];modelMatrixf[4] = modelMat[0][1];
+	modelMatrixf[1] = modelMat[1][0];modelMatrixf[5] = modelMat[1][1];
+	modelMatrixf[2] = modelMat[2][0];modelMatrixf[6] = modelMat[2][1];
+	modelMatrixf[3] = modelMat[3][0];modelMatrixf[7] = modelMat[3][1];
+
+	modelMatrixf[8] = modelMat[0][2];modelMatrixf[12] = modelMat[0][3];
+	modelMatrixf[9] = modelMat[1][2];modelMatrixf[13] = modelMat[1][3];
+	modelMatrixf[10] = modelMat[2][2];modelMatrixf[14] = modelMat[2][3];
+	modelMatrixf[11] = modelMat[3][2];modelMatrixf[15] = modelMat[3][3];
+	
+	// set up projection matricies
+	GLuint modelMatrix = glGetUniformLocationARB(program, "model_matrix");
+	glUniformMatrix4fv( modelMatrix, 1, GL_FALSE, modelMatrixf );
+
+	glBufferData( GL_ARRAY_BUFFER, sizeof(cylinderPointsBuf) + sizeof(cylinderColorsBuf), NULL, GL_STATIC_DRAW );
+	glBufferSubData( GL_ARRAY_BUFFER, 0, sizeof(cylinderPointsBuf), cylinderPointsBuf );
+	glBufferSubData( GL_ARRAY_BUFFER, sizeof(cylinderPointsBuf), sizeof(cylinderColorsBuf), cylinderColorsBuf );
+	GLuint vColor = glGetAttribLocation( program, "vColor" ); 
+	glEnableVertexAttribArray( vColor );
+	glVertexAttribPointer( vColor, 4, GL_FLOAT, GL_FALSE, 0, BUFFER_OFFSET(sizeof(cylinderPointsBuf)) );
+
+	glEnable( GL_DEPTH_TEST );
+    glDrawArrays( GL_TRIANGLES, 0, countOfFace[0]*3 );
+	glDisable( GL_DEPTH_TEST );
+}
 void do_iteration(int index)
 {
 	readFile(index);
 	linkList cursor;
-	for(int i = iteration - 1; i < iteration; i++)
+	for(int i = iteration ; i < iteration; i++) // from 1
 	{
 		cursor = ll->next;
 		while(cursor != NULL)
@@ -267,7 +350,7 @@ void do_iteration(int index)
 	}
 }
 
-int get_count()
+int get_count( void )
 {
 	linkList cursor = ll->next;
 	int count = 0;
@@ -310,7 +393,33 @@ void generateGeometry( void )
 	// sets the default color to clear screen
     glClearColor( 0.0, 0.0, 0.0, 1.0 ); // white background
 }
+float RandomNumber(float Min, float Max)
+{
+    return ((float(rand()) / float(RAND_MAX)) * (Max - Min)) + Min;
+}
+void drawTree( int fileIndex)
+{
+	glClear( GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT );     // clear the window
+	stack<point4> currentPointHistory;
+	stack<angle4> currentAngleHistory;
+	linkList cursor = ll->next;
+	do_iteration(fileIndex);
+	currentPoint.y = -2;
+	currentPoint.x = RandomNumber(-3, 3);
+	currentPoint.z = RandomNumber(-20, -4);
+	drawSphere();
+	while(cursor != NULL)
+	{
+		switch(cursor->value)
+		{
+			case 'F':
 
+				break;
+		}
+		cursor = cursor->next;
+	}
+
+}
 //----------------------------------------------------------------------------
 // this is where the drawing should happen
 void display( void )
@@ -370,6 +479,7 @@ void display( void )
 }
 void myDisplay( int fileIndex )
 {
+	//glClear( GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT );     // clear the window
 	Angel::mat4 modelMat = Angel::identity();
 
 	modelMat = modelMat * Angel::Translate(0, -(yMax[0]-yMin[0])/2, -1) * Angel::RotateY(0.0f) * Angel::RotateX(0.0f);
@@ -442,8 +552,7 @@ void keyboard( unsigned char key, int x, int y )
 			myDisplay(1);
 			break;
 		case 'a':
-			do_iteration(2);
-			printf("\n\n%d\n",get_count());
+			drawTree(0);
 			break;
 		case 033:
 			exit( EXIT_SUCCESS );
@@ -458,12 +567,11 @@ int main( int argc, char **argv )
 	// init glut
     glutInit( &argc, argv );
     glutInitDisplayMode( GLUT_RGBA | GLUT_DOUBLE | GLUT_DEPTH );
-    glutInitWindowSize( 512, 512 );
+    glutInitWindowSize( 800, 800 );
 	width = 512;
 	height = 512;
 	ll->value = 'F';
 	ll->next = NULL;
-    
 
     glutInitContextVersion( 3, 1 );
     glutInitContextProfile( GLUT_CORE_PROFILE );
@@ -477,9 +585,10 @@ int main( int argc, char **argv )
 	plyFileLoad(0);
 	plyFileLoad(1);
 	normalize();
-	printf("%f\n", xMax[0]-xMin[0]);
-	printf("length = %f\n", zMax[0]-zMin[0]);
-	printf("%f", xMax[1]-xMin[1]);
+	/* initialize random seed: */
+	srand (time(NULL));
+
+
 	// assign handlers
     glutDisplayFunc( display );
     glutKeyboardFunc( keyboard );
