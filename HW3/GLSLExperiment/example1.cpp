@@ -13,17 +13,16 @@ int height = 0;
 void generateGeometry( void );
 void display( void );
 void keyboard( unsigned char, int, int );
-void myDisplay( int );
 void plyFileLoad(int);
 void readFile(int);
-void drawFile(int);
 void do_iteration(int);
 int get_count( void );
 void normalize( void );
 void drawTree( int );
 float RandomNumber(float , float );
 void drawSphere( void );
-void drawCylinder( void );//int, int , int );
+void drawCylinder( void );
+void flush( void );
 
 typedef Angel::vec4  color4;
 typedef Angel::vec4  point4;
@@ -174,7 +173,6 @@ void plyFileLoad(int fileIndex)
 		}
 	}
 }
-
 void readFile(int index)
 {
 	char line[64];
@@ -214,38 +212,6 @@ void readFile(int index)
         
 	fclose(inStream);
 }
-
-//generate the drawing buffer for drawing, then draw it (actually, everything related to drawing is drawn here)
-void drawFile(int fileIndex)
-{
-	glPolygonMode( GL_FRONT_AND_BACK, GL_LINE );
-	if(fileIndex == 0)
-	{
-		//glBufferData( GL_ARRAY_BUFFER, sizeof(pointsBuf), pointsBuf, GL_STATIC_DRAW );
-		glBufferData( GL_ARRAY_BUFFER, sizeof(cylinderPointsBuf) + sizeof(cylinderColorsBuf), NULL, GL_STATIC_DRAW );
-		glBufferSubData( GL_ARRAY_BUFFER, 0, sizeof(cylinderPointsBuf), cylinderPointsBuf );
-		glBufferSubData( GL_ARRAY_BUFFER, sizeof(cylinderPointsBuf), sizeof(cylinderColorsBuf), cylinderColorsBuf );
-		GLuint vColor = glGetAttribLocation( program, "vColor" ); 
-		glEnableVertexAttribArray( vColor );
-		glVertexAttribPointer( vColor, 4, GL_FLOAT, GL_FALSE, 0, BUFFER_OFFSET(sizeof(cylinderPointsBuf)) );
-	}
-	else
-	{
-		glBufferData( GL_ARRAY_BUFFER, sizeof(spherePointsBuf) + sizeof(sphereColorsBuf), NULL, GL_STATIC_DRAW );
-		glBufferSubData( GL_ARRAY_BUFFER, 0, sizeof(spherePointsBuf), spherePointsBuf );
-		glBufferSubData( GL_ARRAY_BUFFER, sizeof(spherePointsBuf), sizeof(sphereColorsBuf), sphereColorsBuf );
-		GLuint vColor = glGetAttribLocation( program, "vColor" ); 
-		glEnableVertexAttribArray( vColor );
-		glVertexAttribPointer( vColor, 4, GL_FLOAT, GL_FALSE, 0, BUFFER_OFFSET(sizeof(spherePointsBuf)) );
-	}
-	glEnable( GL_DEPTH_TEST );
-    glDrawArrays( GL_TRIANGLES, 0, countOfFace[fileIndex]*3 );
-	glDisable( GL_DEPTH_TEST ); 
-	glFlush(); // force output to graphics hardware
-
-	// use this call to double buffer
-	 glutSwapBuffers();
-}
 void drawSphere( void )
 {
 	glPolygonMode( GL_FRONT_AND_BACK, GL_LINE );
@@ -278,21 +244,13 @@ void drawSphere( void )
     glDrawArrays( GL_TRIANGLES, 0, countOfFace[1]*3 );
 	glDisable( GL_DEPTH_TEST );
 }
-void drawCylinder( void )//int xRot, int yRot, int zRot)
+void drawCylinder( void )
 {
-	//currentAngle.x += 1.0*xRot*rotaionX;
-	//currentAngle.y += 1.0*yRot*rotaionY;
-	//currentAngle.z += 1.0*zRot*rotaionZ;
-
 	glPolygonMode( GL_FRONT_AND_BACK, GL_LINE );
 	Angel::mat4 modelMat = Angel::identity();
 
 	modelMat = modelMat * Angel::Translate(currentPoint.x , currentPoint.y , currentPoint.z) * Angel::RotateZ(currentAngle.z) * Angel::RotateY(currentAngle.y+90.0f) * Angel::RotateX(currentAngle.x);
-	/*
-	currentAngle.x = 90;
-	currentAngle.y = 0;
-	currentAngle.z = 0;
-	*/
+
 	// update currentPoint now
 	point4 increament = Angel::identity() * Angel::RotateZ(currentAngle.z) * Angel::RotateY(currentAngle.y+90.0f) * Angel::RotateX(currentAngle.x)*point4(0,1.0f,0,1);
 	currentPoint += increament;//Angel::identity() * Angel::RotateZ(currentAngle.z) * Angel::RotateY(currentAngle.y) * Angel::RotateX(currentAngle.x)*point4(0,1.0f,0,1);
@@ -417,9 +375,9 @@ void drawTree( int fileIndex)
 	currentAngle.y = 0;
 	currentAngle.z = 0;
 
-	currentPoint.y = -1;
+	currentPoint.y = -70;
 	currentPoint.x = RandomNumber(-3, 3);
-	currentPoint.z = RandomNumber(-30, -0);
+	currentPoint.z = RandomNumber(-500, -125);
 	currentPoint.w = 1.0f;
 	drawSphere();
 	while(cursor != NULL)
@@ -469,9 +427,13 @@ void drawTree( int fileIndex)
 		cursor = cursor->next;
 	}
 
+	flush();
+
+}
+void flush( void )
+{
 	glFlush();
 	glutSwapBuffers();
-
 }
 //----------------------------------------------------------------------------
 // this is where the drawing should happen
@@ -479,7 +441,8 @@ void display( void )
 {
     glClear( GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT );     // clear the window
 	
-	Angel::mat4 perspectiveMat = Angel::Perspective((GLfloat)45.0, (GLfloat)width/(GLfloat)height, (GLfloat)0.1, (GLfloat) 1000.0);
+	/* Begin of setup view matrix*/
+	Angel::mat4 perspectiveMat = Angel::Perspective((GLfloat)90.0, (GLfloat)width/(GLfloat)height, (GLfloat)0.1, (GLfloat) 1000.0);
 
 	float viewMatrixf[16];
 	viewMatrixf[0] = perspectiveMat[0][0];viewMatrixf[4] = perspectiveMat[0][1];
@@ -491,70 +454,12 @@ void display( void )
 	viewMatrixf[9] = perspectiveMat[1][2];viewMatrixf[13] = perspectiveMat[1][3];
 	viewMatrixf[10] = perspectiveMat[2][2];viewMatrixf[14] = perspectiveMat[2][3];
 	viewMatrixf[11] = perspectiveMat[3][2];viewMatrixf[15] = perspectiveMat[3][3];
-	/*
-	Angel::mat4 modelMat = Angel::identity();
-	modelMat = modelMat * Angel::Translate(0, 0, -1) * Angel::RotateZ(0.0f) * Angel::RotateY(0.0f) * Angel::RotateX(0.0f);
-	//modelMat = modelMat * Angel::Scale(0.05,0.5,0.05);
-
-	float modelMatrixf[16];
-	modelMatrixf[0] = modelMat[0][0];modelMatrixf[4] = modelMat[0][1];
-	modelMatrixf[1] = modelMat[1][0];modelMatrixf[5] = modelMat[1][1];
-	modelMatrixf[2] = modelMat[2][0];modelMatrixf[6] = modelMat[2][1];
-	modelMatrixf[3] = modelMat[3][0];modelMatrixf[7] = modelMat[3][1];
-
-	modelMatrixf[8] = modelMat[0][2];modelMatrixf[12] = modelMat[0][3];
-	modelMatrixf[9] = modelMat[1][2];modelMatrixf[13] = modelMat[1][3];
-	modelMatrixf[10] = modelMat[2][2];modelMatrixf[14] = modelMat[2][3];
-	modelMatrixf[11] = modelMat[3][2];modelMatrixf[15] = modelMat[3][3];
-	*/
-	// set up projection matricies
-	//GLuint modelMatrix = glGetUniformLocationARB(program, "model_matrix");
-	//glUniformMatrix4fv( modelMatrix, 1, GL_FALSE, modelMatrixf );
+	
 	GLuint viewMatrix = glGetUniformLocationARB(program, "projection_matrix");
 	glUniformMatrix4fv( viewMatrix, 1, GL_FALSE, viewMatrixf);
-	/*
-	glPolygonMode( GL_FRONT_AND_BACK, GL_LINE );
-	//glBufferData( GL_ARRAY_BUFFER, sizeof(pointsBuf), pointsBuf, GL_STATIC_DRAW );
-	glBufferData( GL_ARRAY_BUFFER, sizeof(cylinderPointsBuf) + sizeof(cylinderColorsBuf), NULL, GL_STATIC_DRAW );
-	glBufferSubData( GL_ARRAY_BUFFER, 0, sizeof(cylinderPointsBuf), cylinderPointsBuf );
-	glBufferSubData( GL_ARRAY_BUFFER, sizeof(cylinderPointsBuf), sizeof(cylinderColorsBuf), cylinderColorsBuf );
-	GLuint vColor = glGetAttribLocation( program, "vColor" ); 
-	glEnableVertexAttribArray( vColor );
-	glVertexAttribPointer( vColor, 4, GL_FLOAT, GL_FALSE, 0, BUFFER_OFFSET(sizeof(cylinderPointsBuf)) );
-	
-	glEnable( GL_DEPTH_TEST );
-    glDrawArrays( GL_TRIANGLES, 0, countOfFace[fileIndex]*3 );
-	glDisable( GL_DEPTH_TEST ); 
+	/* End of setup view matrix*/
 
-	myDisplay(1);
-	*/
-	drawTree(3);
-}
-void myDisplay( int fileIndex )
-{
-	//glClear( GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT );     // clear the window
-	Angel::mat4 modelMat = Angel::identity();
-
-	modelMat = modelMat * Angel::Translate(0, 0, -1) * Angel::RotateY(0.0f) * Angel::RotateX(0.0f);
-	//modelMat = modelMat * Angel::Scale((xMax[0]-xMin[0])/(xMax[1]-xMin[1])*0.05,(xMax[0]-xMin[0])/(xMax[1]-xMin[1])*0.05,(xMax[0]-xMin[0])/(xMax[1]-xMin[1])*0.05);
-
-	float modelMatrixf[16];
-	modelMatrixf[0] = modelMat[0][0];modelMatrixf[4] = modelMat[0][1];
-	modelMatrixf[1] = modelMat[1][0];modelMatrixf[5] = modelMat[1][1];
-	modelMatrixf[2] = modelMat[2][0];modelMatrixf[6] = modelMat[2][1];
-	modelMatrixf[3] = modelMat[3][0];modelMatrixf[7] = modelMat[3][1];
-
-	modelMatrixf[8] = modelMat[0][2];modelMatrixf[12] = modelMat[0][3];
-	modelMatrixf[9] = modelMat[1][2];modelMatrixf[13] = modelMat[1][3];
-	modelMatrixf[10] = modelMat[2][2];modelMatrixf[14] = modelMat[2][3];
-	modelMatrixf[11] = modelMat[3][2];modelMatrixf[15] = modelMat[3][3];
-	
-	// set up projection matricies
-	GLuint modelMatrix = glGetUniformLocationARB(program, "model_matrix");
-	glUniformMatrix4fv( modelMatrix, 1, GL_FALSE, modelMatrixf );
-
-	drawFile(fileIndex);
-
+	drawTree(0);
 }
 void normalize( void )
 {
@@ -594,16 +499,6 @@ void keyboard( unsigned char key, int x, int y )
 {
     switch ( key ) 
 	{
-		case 'q':
-			glClear( GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT );
-			//readVertexAndFaceFromFile(0);
-			myDisplay(0);
-			break;
-		case 'w':
-			glClear( GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT );
-			//readVertexAndFaceFromFile(1);
-			myDisplay(0);
-			break;
 		case 'a':
 			drawTree(4);
 			break;
@@ -623,6 +518,7 @@ int main( int argc, char **argv )
     glutInitWindowSize( 800, 800 );
 	width = 512;
 	height = 512;
+	/* initial my linkList, and the first node is not used, so just store 'F' in it for fun */
 	ll->value = 'F';
 	ll->next = NULL;
 
@@ -635,13 +531,18 @@ int main( int argc, char **argv )
     glewInit();
 
     generateGeometry();
+	/* load sphere and cylinder into array */
 	plyFileLoad(0);
 	plyFileLoad(1);
+	/* normalize the points for sphere and cylinder, 
+	   so that they will be at the same scale */
 	normalize();
 	/* initialize random seed: */
 	srand (time(NULL));
+	/* initial current variables */
 	currentPoint.w = 1.0f;
 	currentAngle.w = 1.0f;
+
 
 	// assign handlers
     glutDisplayFunc( display );
