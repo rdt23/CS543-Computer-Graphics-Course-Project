@@ -24,6 +24,8 @@ void drawSphere( void );
 void drawCylinder( void );
 void flush( void );
 void drawForest( void );
+void drawGround( void );
+void loadGround( void );
 
 typedef Angel::vec4  color4;
 typedef Angel::vec4  point4;
@@ -70,6 +72,8 @@ point4 spherePointsBuf[1000];
 color4 sphereColorsBuf[1000];
 point4 cylinderPointsBuf[200];
 color4 cylinderColorsBuf[200];
+point4 groundPointsBuf[700];
+color4 groundColorsBuf[700];
 
 point4 currentPoint;
 angle4 currentAngle;
@@ -365,106 +369,167 @@ float RandomNumber(float Min, float Max)
 {
     return ((float(rand()) / float(RAND_MAX)) * (Max - Min)) + Min;
 }
+void loadGround( void )
+{
+	float y = -8.00;
+	color4 colorTmp = color4(0.0, 0.0, 1.0, 1.0);
+	/* z line */
+	for(int i = 0; i <= 60*2; i=i+2)
+	{
+		groundPointsBuf[i] = point4(350.0, y, -i*10/2 + 20, 1.0 );
+		groundColorsBuf[i] = colorTmp;
+		groundColorsBuf[i+1] = colorTmp;
+		groundPointsBuf[i+1] = point4(-350.0, y, -i*10/2 + 20, 1.0 );
+	}
+	for(int i = 0; i <= 70*2; i=i+2)
+	{
+		groundPointsBuf[122+i] = point4(i*5-350.0, y, 20, 1.0 );
+		groundPointsBuf[122+i+1] = point4(i*5-350.0, y, -580, 1.0 );
+		groundColorsBuf[122+i] = colorTmp;
+		groundColorsBuf[122+i+1] = colorTmp;
+	}
+}
+void drawGround( void )
+{
+
+	glPolygonMode( GL_FRONT_AND_BACK, GL_LINE );
+	Angel::mat4 modelMat = Angel::identity();
+
+	modelMat = modelMat * Angel::Translate(0 , 0 ,0) * Angel::RotateZ(0) * Angel::RotateY(0) * Angel::RotateX(0);
+
+	float modelMatrixf[16];
+	modelMatrixf[0] = modelMat[0][0];modelMatrixf[4] = modelMat[0][1];
+	modelMatrixf[1] = modelMat[1][0];modelMatrixf[5] = modelMat[1][1];
+	modelMatrixf[2] = modelMat[2][0];modelMatrixf[6] = modelMat[2][1];
+	modelMatrixf[3] = modelMat[3][0];modelMatrixf[7] = modelMat[3][1];
+
+	modelMatrixf[8] = modelMat[0][2];modelMatrixf[12] = modelMat[0][3];
+	modelMatrixf[9] = modelMat[1][2];modelMatrixf[13] = modelMat[1][3];
+	modelMatrixf[10] = modelMat[2][2];modelMatrixf[14] = modelMat[2][3];
+	modelMatrixf[11] = modelMat[3][2];modelMatrixf[15] = modelMat[3][3];
+	
+	// set up projection matricies
+	GLuint modelMatrix = glGetUniformLocationARB(program, "model_matrix");
+	glUniformMatrix4fv( modelMatrix, 1, GL_FALSE, modelMatrixf );
+
+	glBufferData( GL_ARRAY_BUFFER, sizeof(groundPointsBuf) + sizeof(groundColorsBuf), NULL, GL_STATIC_DRAW );
+	glBufferSubData( GL_ARRAY_BUFFER, 0, sizeof(groundPointsBuf), groundPointsBuf );
+	glBufferSubData( GL_ARRAY_BUFFER, sizeof(groundPointsBuf), sizeof(groundColorsBuf), groundColorsBuf );
+	GLuint vColor = glGetAttribLocation( program, "vColor" ); 
+	glEnableVertexAttribArray( vColor );
+	glVertexAttribPointer( vColor, 4, GL_FLOAT, GL_FALSE, 0, BUFFER_OFFSET(sizeof(groundPointsBuf)) );
+
+	glEnable( GL_DEPTH_TEST );
+    glDrawArrays( GL_LINES, 0, 264); 
+	glDisable( GL_DEPTH_TEST );
+}
 void drawTree( int fileIndex)
 {
 	//glClear( GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT );     // clear the window
-	
-	color4 randColor = color4(RandomNumber(0,2.0), RandomNumber(0,2.0) , RandomNumber(0,2.0), 1.0f);
-	for(int i = 0, j = 0; i < countOfFace[0]*3; i++)
+	if(fileIndex == -1)
 	{
-		cylinderColorsBuf[i] = randColor;//color4( 0.0, 1.0, 0.0, 1.0 );
+		drawForest();
 	}
-	for(int i = 0, j = 0; i < countOfFace[1]*3; i++)
+	else
 	{
-		sphereColorsBuf[i] = randColor;//color4( 0.0, 1.0, 0.0, 1.0 );
-	}
-	
-	stack<point4> currentPointHistory;
-	stack<angle4> currentAngleHistory;
-	do_iteration(fileIndex);
-	//get_count();
-	linkList cursor = ll->next;
-	currentAngle.x = 0;
-	currentAngle.y = 0;
-	currentAngle.z = 0;
-
-	currentPoint.y = -10;
-	switch(fileIndex)
-	{
-		case 0:
-			currentPoint.x = RandomNumber(-330, 330);
-			currentPoint.z = RandomNumber(-500, -325);
-			break;
-		case 1:
-			currentPoint.x = RandomNumber(-80, 80);
-			currentPoint.z = RandomNumber(-200, -75);
-			break;
-		case 2:
-			currentPoint.x = RandomNumber(-20, 20);
-			currentPoint.z = RandomNumber(-50, -25);
-			break;
-		case 3:
-			currentPoint.x = RandomNumber(-20, 20);
-			currentPoint.z = RandomNumber(-50, -25);
-			break;
-		case 4:
-			currentPoint.x = RandomNumber(-20, 20);
-			currentPoint.z = RandomNumber(-30, -25);
-			break;
-
-	}
-
-	currentPoint.w = 1.0f;
-	drawSphere();
-	while(cursor != NULL)
-	{
-		switch(cursor->value)
+		color4 randColor = color4(RandomNumber(0,2.0), RandomNumber(0,2.0) , RandomNumber(0,2.0), 1.0f);
+		for(int i = 0, j = 0; i < countOfFace[0]*3; i++)
 		{
-			case 'F':
-				drawCylinder();
-				drawSphere();
-				break;
-			case '+':
-				currentAngle.x += rotaionX;
-				break;
-			case '-':
-				currentAngle.x -= rotaionX;
-				break;
-			case '&':
-				currentAngle.y += rotaionY;
-				break;
-			case '^':
-				currentAngle.y -= rotaionY;
-				break;
-			case '\\':
-				currentAngle.z += rotaionZ;
-				break;
-			case '/':
-				currentAngle.z -= rotaionZ;
-				break;
-			case '[':
-				currentPointHistory.push(currentPoint);
-				currentAngleHistory.push(currentAngle);
-				break;
-			case ']':
-				currentPoint = currentPointHistory.top();
-				currentAngle = currentAngleHistory.top();
-				currentPointHistory.pop();
-				currentAngleHistory.pop();
-				break;
-			case '|':
-				currentAngle.x = -currentAngle.x;
-				currentAngle.y = -currentAngle.y;
-				currentAngle.z = -currentAngle.z;
-				break;
-			default:
-				break;
+			cylinderColorsBuf[i] = randColor;//color4( 0.0, 1.0, 0.0, 1.0 );
 		}
-		cursor = cursor->next;
+		for(int i = 0, j = 0; i < countOfFace[1]*3; i++)
+		{
+			sphereColorsBuf[i] = randColor;//color4( 0.0, 1.0, 0.0, 1.0 );
+		}
+	
+		stack<point4> currentPointHistory;
+		stack<angle4> currentAngleHistory;
+		do_iteration(fileIndex);
+		//get_count();
+		linkList cursor = ll->next;
+		currentAngle.x = 0;
+		currentAngle.y = 0;
+		currentAngle.z = 0;
+
+		currentPoint.y = -10.0;
+		switch(fileIndex)
+		{
+			case 0:
+				currentPoint.x = RandomNumber(-330, 330);
+				currentPoint.z = RandomNumber(-500, -325);
+				break;
+			case 1:
+				currentPoint.x = RandomNumber(-80, 80);
+				currentPoint.z = RandomNumber(-200, -75);
+				break;
+			case 2:
+				currentPoint.x = RandomNumber(-20, 20);
+				currentPoint.z = RandomNumber(-50, -25);
+				break;
+			case 3:
+				currentPoint.x = RandomNumber(-20, 20);
+				currentPoint.z = RandomNumber(-50, -25);
+				break;
+			case 4:
+				currentPoint.x = RandomNumber(-20, 20);
+				currentPoint.z = RandomNumber(-30, -25);
+				break;
+
+		}
+
+		currentPoint.w = 1.0f;
+		drawSphere();
+		while(cursor != NULL)
+		{
+			switch(cursor->value)
+			{
+				case 'F':
+					drawCylinder();
+					drawSphere();
+					break;
+				case '+':
+					currentAngle.x += rotaionX;
+					break;
+				case '-':
+					currentAngle.x -= rotaionX;
+					break;
+				case '&':
+					currentAngle.y += rotaionY;
+					break;
+				case '^':
+					currentAngle.y -= rotaionY;
+					break;
+				case '\\':
+					currentAngle.z += rotaionZ;
+					break;
+				case '/':
+					currentAngle.z -= rotaionZ;
+					break;
+				case '[':
+					currentPointHistory.push(currentPoint);
+					currentAngleHistory.push(currentAngle);
+					break;
+				case ']':
+					currentPoint = currentPointHistory.top();
+					currentAngle = currentAngleHistory.top();
+					currentPointHistory.pop();
+					currentAngleHistory.pop();
+					break;
+				case '|':
+					currentAngle.x = -currentAngle.x;
+					currentAngle.y = -currentAngle.y;
+					currentAngle.z = -currentAngle.z;
+					break;
+				default:
+					break;
+			}
+			cursor = cursor->next;
+		}
 	}
 }
 void drawForest( void )
 {
+	drawGround();
 	for(int i = 0; i < 15; i++)
 	{
 		drawTree(i%5);
@@ -500,8 +565,8 @@ void display( void )
 	glUniformMatrix4fv( viewMatrix, 1, GL_FALSE, viewMatrixf);
 	/* End of setup view matrix*/
 	glClear( GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT );     // clear the window
-	//drawTree(fileIndex);
-	drawTree(2);
+	drawTree(fileIndex);
+	//drawTree(0);
 	flush();
 }
 void normalize( void )
@@ -550,7 +615,9 @@ void keyboard( unsigned char key, int x, int y )
 			break;
 		case 'f':
 			glClear( GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT );     // clear the window
-			drawForest();
+			//drawForest();
+			fileIndex = -1;
+			drawTree(fileIndex);
 			flush();
 			break;
 		case 033:
@@ -585,6 +652,7 @@ int main( int argc, char **argv )
 	/* load sphere and cylinder into array */
 	plyFileLoad(0);
 	plyFileLoad(1);
+	loadGround();
 	/* normalize the points for sphere and cylinder, 
 	   so that they will be at the same scale */
 	normalize();
