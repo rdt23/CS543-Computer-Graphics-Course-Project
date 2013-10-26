@@ -368,6 +368,17 @@ float RandomNumber(float Min, float Max)
 void drawTree( int fileIndex)
 {
 	//glClear( GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT );     // clear the window
+	
+	color4 randColor = color4(RandomNumber(0,2.0), RandomNumber(0,2.0) , RandomNumber(0,2.0), 1.0f);
+	for(int i = 0, j = 0; i < countOfFace[0]*3; i++)
+	{
+		cylinderColorsBuf[i] = randColor;//color4( 0.0, 1.0, 0.0, 1.0 );
+	}
+	for(int i = 0, j = 0; i < countOfFace[1]*3; i++)
+	{
+		sphereColorsBuf[i] = randColor;//color4( 0.0, 1.0, 0.0, 1.0 );
+	}
+	
 	stack<point4> currentPointHistory;
 	stack<angle4> currentAngleHistory;
 	do_iteration(fileIndex);
@@ -385,8 +396,8 @@ void drawTree( int fileIndex)
 			currentPoint.z = RandomNumber(-500, -325);
 			break;
 		case 1:
-			currentPoint.x = RandomNumber(-130, 130);
-			currentPoint.z = RandomNumber(-300, -125);
+			currentPoint.x = RandomNumber(-80, 80);
+			currentPoint.z = RandomNumber(-200, -75);
 			break;
 		case 2:
 			currentPoint.x = RandomNumber(-20, 20);
@@ -490,7 +501,7 @@ void display( void )
 	/* End of setup view matrix*/
 	glClear( GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT );     // clear the window
 	//drawTree(fileIndex);
-	drawTree(4);
+	drawTree(2);
 	flush();
 }
 void normalize( void )
