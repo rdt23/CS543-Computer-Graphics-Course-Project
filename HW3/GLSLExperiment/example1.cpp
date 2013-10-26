@@ -327,11 +327,13 @@ void drawCylinder( void )
 }
 void drawCar( void )
 {
+	float xRand = RandomNumber(7,10);
+	float zRand = RandomNumber(0,2);
 	glPolygonMode( GL_FRONT_AND_BACK, GL_LINE );
 	Angel::mat4 modelMat = Angel::identity();
 	
-	modelMat = modelMat *Angel::Translate((xMax[2]+xMin[2]+10.0), -(yMax[2]+yMin[2])/2-5.0, 
-				-sqrt(pow(xMax[2]-xMin[2],2)+pow(yMax[2]-yMin[2],2)+pow(zMax[2]-zMin[2],2))) * 
+	modelMat = modelMat *Angel::Translate((xMax[2]+xMin[2]+xRand), -(yMax[2]+yMin[2])/2-5.0, 
+				-sqrt(pow(xMax[2]-xMin[2],2)+pow(yMax[2]-yMin[2],2)+pow(zMax[2]-zMin[2],2))+zRand) * 
 					Angel::RotateY(90.0f) * Angel::RotateZ(90.0f);
 	modelMat = modelMat *Angel::Scale(0.7,0.7,0.7);
 
