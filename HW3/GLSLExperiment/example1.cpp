@@ -160,6 +160,8 @@ void plyFileLoad(int fileIndex)
 	}
 
 	fclose(inStream);
+	/* Load different ply files into different point buffers  
+	   cylinder, sphere, car, cow[cow doesn't work here] */
 	switch(fileIndex)
 	{
 		case 0:
@@ -364,7 +366,10 @@ void drawCow( void )
 	glPolygonMode( GL_FRONT_AND_BACK, GL_LINE );
 	Angel::mat4 modelMat = Angel::identity();
 
-	modelMat = modelMat * Angel::Translate(0 , 0 , -10) * Angel::RotateZ(0.0f) * Angel::RotateY(0.0f) * Angel::RotateX(0.0f);
+	modelMat = modelMat *Angel::Translate((xMax[2]+xMin[2]+10.0), -(yMax[2]+yMin[2])/2+5.0, 
+				-sqrt(pow(xMax[2]-xMin[2],2)+pow(yMax[2]-yMin[2],2)+pow(zMax[2]-zMin[2],2))) * 
+					Angel::RotateY(90.0f) * Angel::RotateZ(90.0f);
+	modelMat = modelMat *Angel::Scale(0.7,0.7,0.7);
 
 	float modelMatrixf[16];
 	modelMatrixf[0] = modelMat[0][0];modelMatrixf[4] = modelMat[0][1];
@@ -397,7 +402,7 @@ void do_iteration(int index)
 {
 	readFile(index);
 	linkList cursor;
-	for(int i = 1/*iteration*/ ; i < iteration; i++) // from 1
+	for(int i = 1 ; i < iteration; i++) // from 1
 	{
 		cursor = ll->next;
 		while(cursor != NULL)
@@ -639,7 +644,6 @@ void drawForest( void )
 		drawTree(i%5);
 	}
 }
-
 void flush( void )
 {
 	glFlush();
@@ -729,7 +733,6 @@ void keyboard( unsigned char key, int x, int y )
 			break;
     }
 }
-
 //----------------------------------------------------------------------------
 // entry point
 int main( int argc, char **argv )
@@ -757,7 +760,7 @@ int main( int argc, char **argv )
 	plyFileLoad(0);
 	plyFileLoad(1);
 	plyFileLoad(2);
-	plyFileLoad(3);
+	//plyFileLoad(3);
 	loadGround();
 	/* normalize the points for sphere and cylinder, 
 	   so that they will be at the same scale */
