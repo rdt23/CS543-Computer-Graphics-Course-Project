@@ -251,7 +251,7 @@ void drawCylinder( void )
 	glPolygonMode( GL_FRONT_AND_BACK, GL_LINE );
 	Angel::mat4 modelMat = Angel::identity();
 
-	modelMat = modelMat * Angel::Translate(currentPoint.x , currentPoint.y , currentPoint.z) * Angel::RotateZ(currentAngle.z) * Angel::RotateY(currentAngle.y+90.0f) * Angel::RotateX(currentAngle.x);
+	modelMat = modelMat * Angel::Translate(currentPoint.x , currentPoint.y , currentPoint.z) * Angel::RotateZ(currentAngle.z) * Angel::RotateY(currentAngle.y-90.0f) * Angel::RotateX(currentAngle.x);
 
 	// update currentPoint now
 	//point4 increament = Angel::identity() * Angel::RotateZ(currentAngle.z) * Angel::RotateY(currentAngle.y+90.0f) * Angel::RotateX(currentAngle.x)*point4(0,1.0f,0,1);
@@ -401,11 +401,11 @@ void drawTree( int fileIndex)
 			break;
 		case 2:
 			currentPoint.x = RandomNumber(-20, 20);
-			currentPoint.z = RandomNumber(-30, -25);
+			currentPoint.z = RandomNumber(-50, -25);
 			break;
 		case 3:
-			currentPoint.x = RandomNumber(-20, -5);
-			currentPoint.z = RandomNumber(-30, -25);
+			currentPoint.x = RandomNumber(-20, 20);
+			currentPoint.z = RandomNumber(-50, -25);
 			break;
 		case 4:
 			currentPoint.x = RandomNumber(-20, 20);
@@ -465,9 +465,9 @@ void drawTree( int fileIndex)
 }
 void drawForest( void )
 {
-	for(int i = 0; i < 5; i++)
+	for(int i = 0; i < 15; i++)
 	{
-		drawTree(i);
+		drawTree(i%5);
 	}
 }
 
