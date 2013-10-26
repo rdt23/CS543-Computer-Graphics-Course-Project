@@ -163,7 +163,7 @@ void plyFileLoad(int fileIndex)
 	switch(fileIndex)
 	{
 		case 0:
-			for(int i = 0, j = 0; i < countOfFace[fileIndex]*3; i=i+3)
+			for(int i = 0; i < countOfFace[fileIndex]*3; i=i+3)
 			{
 				cylinderPointsBuf[i] = points[face[i/3].vertex1];
 				cylinderPointsBuf[i+1] = points[face[i/3].vertex2];
@@ -174,7 +174,7 @@ void plyFileLoad(int fileIndex)
 			}
 			break;
 		case 1:
-			for(int i = 0, j = 0; i < countOfFace[fileIndex]*3; i=i+3)
+			for(int i = 0; i < countOfFace[fileIndex]*3; i=i+3)
 			{
 				spherePointsBuf[i] = points[face[i/3].vertex1];
 				spherePointsBuf[i+1] = points[face[i/3].vertex2];
@@ -185,7 +185,7 @@ void plyFileLoad(int fileIndex)
 			}
 			break;
 		case 2:
-			for(int i = 0, j = 0; i < countOfFace[fileIndex]*3; i=i+3)
+			for(int i = 0; i < countOfFace[fileIndex]*3; i=i+3)
 			{
 				carPointsBuf[i] = points[face[i/3].vertex1];
 				carPointsBuf[i+1] = points[face[i/3].vertex2];
@@ -196,7 +196,7 @@ void plyFileLoad(int fileIndex)
 			}
 			break;
 		case 3:
-			for(int i = 0, j = 0; i < countOfFace[fileIndex]*3; i=i+3)
+			for(int i = 0; i < countOfFace[fileIndex]*3; i=i+3)
 			{
 				cowPointsBuf[i] = points[face[i/3].vertex1];
 				cowPointsBuf[i+1] = points[face[i/3].vertex2];
@@ -364,7 +364,7 @@ void drawCow( void )
 	glPolygonMode( GL_FRONT_AND_BACK, GL_LINE );
 	Angel::mat4 modelMat = Angel::identity();
 
-	modelMat = modelMat * Angel::Translate(0 , 0 , 0) * Angel::RotateZ(0.0f) * Angel::RotateY(0.0f) * Angel::RotateX(0.0f);
+	modelMat = modelMat * Angel::Translate(0 , 0 , -10) * Angel::RotateZ(0.0f) * Angel::RotateY(0.0f) * Angel::RotateX(0.0f);
 
 	float modelMatrixf[16];
 	modelMatrixf[0] = modelMat[0][0];modelMatrixf[4] = modelMat[0][1];
@@ -633,6 +633,7 @@ void drawForest( void )
 {
 	drawGround();
 	drawCar();
+	//drawCow();
 	for(int i = 0; i < 15; i++)
 	{
 		drawTree(i%5);
