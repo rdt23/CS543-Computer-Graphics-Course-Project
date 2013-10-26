@@ -26,6 +26,8 @@ void flush( void );
 void drawForest( void );
 void drawGround( void );
 void loadGround( void );
+void drawCar( void );
+void drawCow( void );
 
 typedef Angel::vec4  color4;
 typedef Angel::vec4  point4;
@@ -58,15 +60,19 @@ char formula[32];
 linkList ll = (linkNode*)malloc(sizeof(linkNode));
 
 char fileName[5][10] = {"lsys1.txt","lsys2.txt","lsys3.txt","lsys4.txt","lsys5.txt"};
-char plyFileName[2][15] = {"cylinder.ply","sphere.ply"};
-
-static int countOfVertex[2];
-static int countOfFace[2]; 
+char plyFileName[4][20] = {"cylinder.ply","sphere.ply","big_porsche.ply", "cow.ply"};
+static int countOfVertex[4];
+static int countOfFace[4]; 
 
 //store points from ply files
 point4 points[200];
 //store mesh information from ply files
-face3    face[360];
+face3    face[10500];
+
+point4 carPointsBuf[32000];
+color4 carColorsBuf[32000];
+point4 cowPointsBuf[18000];
+color4 cowColorsBuf[18000];
 
 point4 spherePointsBuf[1000];
 color4 sphereColorsBuf[1000];
@@ -79,7 +85,7 @@ point4 currentPoint;
 angle4 currentAngle;
 
 static int fileIndex = 0;
-float xMax[2], xMin[2], yMax[2], yMin[2], zMax[2], zMin[2];
+float xMax[4], xMin[4], yMax[4], yMin[4], zMax[4], zMin[4];
 
 //load info from ply file into arrays
 void plyFileLoad(int fileIndex)
@@ -154,30 +160,56 @@ void plyFileLoad(int fileIndex)
 	}
 
 	fclose(inStream);
-	if(fileIndex == 0)
+	switch(fileIndex)
 	{
-		for(int i = 0, j = 0; i < countOfFace[fileIndex]*3; i=i+3)
-		{
-			cylinderPointsBuf[i] = points[face[i/3].vertex1];
-			cylinderPointsBuf[i+1] = points[face[i/3].vertex2];
-			cylinderPointsBuf[i+2] = points[face[i/3].vertex3];
-			cylinderColorsBuf[i] = color4( 0.0, 1.0, 0.0, 1.0 );
-			cylinderColorsBuf[i+1] = color4( 0.0, 1.0, 0.0, 1.0 );
-			cylinderColorsBuf[i+2] = color4( 0.0, 1.0, 0.0, 1.0 );
-		}
+		case 0:
+			for(int i = 0, j = 0; i < countOfFace[fileIndex]*3; i=i+3)
+			{
+				cylinderPointsBuf[i] = points[face[i/3].vertex1];
+				cylinderPointsBuf[i+1] = points[face[i/3].vertex2];
+				cylinderPointsBuf[i+2] = points[face[i/3].vertex3];
+				cylinderColorsBuf[i] = color4( 0.0, 1.0, 0.0, 1.0 );
+				cylinderColorsBuf[i+1] = color4( 0.0, 1.0, 0.0, 1.0 );
+				cylinderColorsBuf[i+2] = color4( 0.0, 1.0, 0.0, 1.0 );
+			}
+			break;
+		case 1:
+			for(int i = 0, j = 0; i < countOfFace[fileIndex]*3; i=i+3)
+			{
+				spherePointsBuf[i] = points[face[i/3].vertex1];
+				spherePointsBuf[i+1] = points[face[i/3].vertex2];
+				spherePointsBuf[i+2] = points[face[i/3].vertex3];
+				sphereColorsBuf[i] = color4( 0.0, 1.0, 0.0, 1.0 );
+				sphereColorsBuf[i+1] = color4( 0.0, 1.0, 0.0, 1.0 );
+				sphereColorsBuf[i+2] = color4( 0.0, 1.0, 0.0, 1.0 );
+			}
+			break;
+		case 2:
+			for(int i = 0, j = 0; i < countOfFace[fileIndex]*3; i=i+3)
+			{
+				carPointsBuf[i] = points[face[i/3].vertex1];
+				carPointsBuf[i+1] = points[face[i/3].vertex2];
+				carPointsBuf[i+2] = points[face[i/3].vertex3];
+				carColorsBuf[i] = color4(1, 1, 0, 1.0 );
+				carColorsBuf[i+1] = color4(1, 1, 0, 1.0 );
+				carColorsBuf[i+2] = color4(1, 1, 0, 1.0 );
+			}
+			break;
+		case 3:
+			for(int i = 0, j = 0; i < countOfFace[fileIndex]*3; i=i+3)
+			{
+				cowPointsBuf[i] = points[face[i/3].vertex1];
+				cowPointsBuf[i+1] = points[face[i/3].vertex2];
+				cowPointsBuf[i+2] = points[face[i/3].vertex3];
+				cowColorsBuf[i] = color4( 1.0, 0.0, 0.0, 1.0 );
+				cowColorsBuf[i+1] = color4( 1.0, 0.0, 0.0, 1.0 );
+				cowColorsBuf[i+2] = color4( 1.0, 0.0, 0.0, 1.0 );
+			}
+			break;
+		default:
+			break;
 	}
-	else
-	{
-		for(int i = 0, j = 0; i < countOfFace[fileIndex]*3; i=i+3)
-		{
-			spherePointsBuf[i] = points[face[i/3].vertex1];
-			spherePointsBuf[i+1] = points[face[i/3].vertex2];
-			spherePointsBuf[i+2] = points[face[i/3].vertex3];
-			sphereColorsBuf[i] = color4( 0.0, 1.0, 0.0, 1.0 );
-			sphereColorsBuf[i+1] = color4( 0.0, 1.0, 0.0, 1.0 );
-			sphereColorsBuf[i+2] = color4( 0.0, 1.0, 0.0, 1.0 );
-		}
-	}
+	
 }
 void readFile(int index)
 {
@@ -291,6 +323,75 @@ void drawCylinder( void )
 
 
 }
+void drawCar( void )
+{
+	glPolygonMode( GL_FRONT_AND_BACK, GL_LINE );
+	Angel::mat4 modelMat = Angel::identity();
+
+	modelMat = modelMat *Angel::Translate((xMax[2]+xMin[2]+10.0), -(yMax[2]+yMin[2])/2-5.0, 
+				-sqrt(pow(xMax[2]-xMin[2],2)+pow(yMax[2]-yMin[2],2)+pow(zMax[2]-zMin[2],2)-10.0)) * 
+					Angel::RotateY(90.0f) * Angel::RotateZ(90.0f);
+	modelMat = modelMat *Angel::Scale(0.7,0.7,0.7);
+	float modelMatrixf[16];
+	modelMatrixf[0] = modelMat[0][0];modelMatrixf[4] = modelMat[0][1];
+	modelMatrixf[1] = modelMat[1][0];modelMatrixf[5] = modelMat[1][1];
+	modelMatrixf[2] = modelMat[2][0];modelMatrixf[6] = modelMat[2][1];
+	modelMatrixf[3] = modelMat[3][0];modelMatrixf[7] = modelMat[3][1];
+
+	modelMatrixf[8] = modelMat[0][2];modelMatrixf[12] = modelMat[0][3];
+	modelMatrixf[9] = modelMat[1][2];modelMatrixf[13] = modelMat[1][3];
+	modelMatrixf[10] = modelMat[2][2];modelMatrixf[14] = modelMat[2][3];
+	modelMatrixf[11] = modelMat[3][2];modelMatrixf[15] = modelMat[3][3];
+	
+	// set up projection matricies
+	GLuint modelMatrix = glGetUniformLocationARB(program, "model_matrix");
+	glUniformMatrix4fv( modelMatrix, 1, GL_FALSE, modelMatrixf );
+
+	glBufferData( GL_ARRAY_BUFFER, sizeof(carPointsBuf) + sizeof(carColorsBuf), NULL, GL_STATIC_DRAW );
+	glBufferSubData( GL_ARRAY_BUFFER, 0, sizeof(carPointsBuf), carPointsBuf );
+	glBufferSubData( GL_ARRAY_BUFFER, sizeof(carPointsBuf), sizeof(carColorsBuf), carColorsBuf );
+	GLuint vColor = glGetAttribLocation( program, "vColor" ); 
+	glEnableVertexAttribArray( vColor );
+	glVertexAttribPointer( vColor, 4, GL_FLOAT, GL_FALSE, 0, BUFFER_OFFSET(sizeof(carColorsBuf)) );
+
+	glEnable( GL_DEPTH_TEST );
+    glDrawArrays( GL_TRIANGLES, 0, countOfFace[2]*3 );
+	glDisable( GL_DEPTH_TEST );
+}
+void drawCow( void )
+{
+	glPolygonMode( GL_FRONT_AND_BACK, GL_LINE );
+	Angel::mat4 modelMat = Angel::identity();
+
+	modelMat = modelMat * Angel::Translate(0 , 0 , 0) * Angel::RotateZ(0.0f) * Angel::RotateY(0.0f) * Angel::RotateX(0.0f);
+
+	float modelMatrixf[16];
+	modelMatrixf[0] = modelMat[0][0];modelMatrixf[4] = modelMat[0][1];
+	modelMatrixf[1] = modelMat[1][0];modelMatrixf[5] = modelMat[1][1];
+	modelMatrixf[2] = modelMat[2][0];modelMatrixf[6] = modelMat[2][1];
+	modelMatrixf[3] = modelMat[3][0];modelMatrixf[7] = modelMat[3][1];
+
+	modelMatrixf[8] = modelMat[0][2];modelMatrixf[12] = modelMat[0][3];
+	modelMatrixf[9] = modelMat[1][2];modelMatrixf[13] = modelMat[1][3];
+	modelMatrixf[10] = modelMat[2][2];modelMatrixf[14] = modelMat[2][3];
+	modelMatrixf[11] = modelMat[3][2];modelMatrixf[15] = modelMat[3][3];
+	
+	// set up projection matricies
+	GLuint modelMatrix = glGetUniformLocationARB(program, "model_matrix");
+	glUniformMatrix4fv( modelMatrix, 1, GL_FALSE, modelMatrixf );
+
+	glBufferData( GL_ARRAY_BUFFER, sizeof(cowPointsBuf) + sizeof(cowColorsBuf), NULL, GL_STATIC_DRAW );
+	glBufferSubData( GL_ARRAY_BUFFER, 0, sizeof(cowPointsBuf), cowPointsBuf );
+	glBufferSubData( GL_ARRAY_BUFFER, sizeof(cowPointsBuf), sizeof(cowColorsBuf), cowColorsBuf );
+	GLuint vColor = glGetAttribLocation( program, "vColor" ); 
+	glEnableVertexAttribArray( vColor );
+	glVertexAttribPointer( vColor, 4, GL_FLOAT, GL_FALSE, 0, BUFFER_OFFSET(sizeof(cowColorsBuf)) );
+
+	glEnable( GL_DEPTH_TEST );
+    glDrawArrays( GL_TRIANGLES, 0, countOfFace[3]*3 );
+	glDisable( GL_DEPTH_TEST );
+}
+
 void do_iteration(int index)
 {
 	readFile(index);
@@ -530,6 +631,7 @@ void drawTree( int fileIndex)
 void drawForest( void )
 {
 	drawGround();
+	drawCar();
 	for(int i = 0; i < 15; i++)
 	{
 		drawTree(i%5);
@@ -652,6 +754,8 @@ int main( int argc, char **argv )
 	/* load sphere and cylinder into array */
 	plyFileLoad(0);
 	plyFileLoad(1);
+	plyFileLoad(2);
+	plyFileLoad(3);
 	loadGround();
 	/* normalize the points for sphere and cylinder, 
 	   so that they will be at the same scale */
@@ -661,7 +765,7 @@ int main( int argc, char **argv )
 	/* initial current variables */
 	currentPoint.w = 1.0f;
 	currentAngle.w = 1.0f;
-	fileIndex = 0;
+	fileIndex = -1;
 
 	// assign handlers
     glutDisplayFunc( display );
