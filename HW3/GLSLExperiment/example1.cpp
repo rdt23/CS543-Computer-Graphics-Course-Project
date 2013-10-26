@@ -618,9 +618,9 @@ void drawTree( int fileIndex)
 					currentAngleHistory.pop();
 					break;
 				case '|':
-					currentAngle.x = -currentAngle.x;
-					currentAngle.y = -currentAngle.y;
-					currentAngle.z = -currentAngle.z;
+					currentAngle.x += 180;//-currentAngle.x;
+					currentAngle.y += 180;//= -currentAngle.y;
+					currentAngle.z += 180;//= -currentAngle.z;
 					break;
 				default:
 					break;
@@ -668,8 +668,8 @@ void display( void )
 	glUniformMatrix4fv( viewMatrix, 1, GL_FALSE, viewMatrixf);
 	/* End of setup view matrix*/
 	glClear( GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT );     // clear the window
-	drawTree(fileIndex);
-	//drawTree(0);
+	//drawTree(fileIndex);
+	drawTree(3);
 	flush();
 }
 void normalize( void )
