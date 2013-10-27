@@ -717,6 +717,41 @@ void keyboard( unsigned char key, int x, int y )
 {
     switch ( key ) 
 	{
+		case 'a':
+			fileIndex = 0;
+			glClear( GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT );     // clear the window
+			drawTree(fileIndex);
+			flush();
+			break;
+
+		case 'b':
+			fileIndex = 1;
+			glClear( GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT );     // clear the window
+			drawTree(fileIndex);
+			flush();
+			break;
+
+		case 'c':
+			fileIndex = 2;
+			glClear( GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT );     // clear the window
+			drawTree(fileIndex);
+			flush();
+			break;
+
+		case 'd':
+			fileIndex = 3;
+			glClear( GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT );     // clear the window
+			drawTree(fileIndex);
+			flush();
+			break;
+
+		case 'e':
+			fileIndex = 4;
+			glClear( GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT );     // clear the window
+			drawTree(fileIndex);
+			flush();
+			break;
+
 		case 'r':
 			fileIndex = rand() % 5;
 			glClear( GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT );     // clear the window
