@@ -28,6 +28,7 @@ void drawGround( void );
 void loadGround( void );
 void drawCar( void );
 void drawCow( void );
+void drawSmallCar( void );
 
 typedef Angel::vec4  color4;
 typedef Angel::vec4  point4;
@@ -132,8 +133,15 @@ void plyFileLoad(int fileIndex)
 	
 	for(int j = 0; j < countOfVertex[fileIndex]; j++)
 	{	//read each vertex
+		/*if(fileIndex == 0)
+		{*/
+			fscanf(inStream,"%f %f %f", &z, &x, &y);
+		/*}
+		else
+		{
+			fscanf(inStream,"%f %f %f", &x, &y, &z);
+		}*/
 		
-		fscanf(inStream,"%f %f %f", &z, &x, &y);
 		if(j == 0)
 		{
 			xMax[fileIndex] = xMin[fileIndex] = x;
@@ -363,15 +371,58 @@ void drawCar( void )
     glDrawArrays( GL_TRIANGLES, 0, countOfFace[2]*3 );
 	glDisable( GL_DEPTH_TEST );
 }
+void drawSmallCar( void )
+{
+	float xRand = RandomNumber(-7,-3);
+	float zRand = RandomNumber(-3,2);
+	color4 randColor = color4(RandomNumber(0,2.0), RandomNumber(0,2.0) , RandomNumber(0,2.0), 1.0f);
+	for(int i = 0, j = 0; i < countOfFace[2]*3; i++)
+	{
+		carColorsBuf[i] = randColor;//color4( 0.0, 1.0, 0.0, 1.0 );
+	}
+	glPolygonMode( GL_FRONT_AND_BACK, GL_LINE );
+	Angel::mat4 modelMat = Angel::identity();
+	
+	modelMat = modelMat *Angel::Translate((xMax[2]+xMin[2]+xRand), -(yMax[2]+yMin[2])/2-3.20, 
+				-sqrt(pow(xMax[2]-xMin[2],2)+pow(yMax[2]-yMin[2],2)+pow(zMax[2]-zMin[2],2))+zRand) * 
+					Angel::RotateY(90.0f) * Angel::RotateZ(90.0f);
+	modelMat = modelMat *Angel::Scale(0.5,0.5,0.5);
+
+	float modelMatrixf[16];
+	modelMatrixf[0] = modelMat[0][0];modelMatrixf[4] = modelMat[0][1];
+	modelMatrixf[1] = modelMat[1][0];modelMatrixf[5] = modelMat[1][1];
+	modelMatrixf[2] = modelMat[2][0];modelMatrixf[6] = modelMat[2][1];
+	modelMatrixf[3] = modelMat[3][0];modelMatrixf[7] = modelMat[3][1];
+
+	modelMatrixf[8] = modelMat[0][2];modelMatrixf[12] = modelMat[0][3];
+	modelMatrixf[9] = modelMat[1][2];modelMatrixf[13] = modelMat[1][3];
+	modelMatrixf[10] = modelMat[2][2];modelMatrixf[14] = modelMat[2][3];
+	modelMatrixf[11] = modelMat[3][2];modelMatrixf[15] = modelMat[3][3];
+	
+	// set up projection matricies
+	GLuint modelMatrix = glGetUniformLocationARB(program, "model_matrix");
+	glUniformMatrix4fv( modelMatrix, 1, GL_FALSE, modelMatrixf );
+
+	glBufferData( GL_ARRAY_BUFFER, sizeof(carPointsBuf) + sizeof(carColorsBuf), NULL, GL_STATIC_DRAW );
+	glBufferSubData( GL_ARRAY_BUFFER, 0, sizeof(carPointsBuf), carPointsBuf );
+	glBufferSubData( GL_ARRAY_BUFFER, sizeof(carPointsBuf), sizeof(carColorsBuf), carColorsBuf );
+	GLuint vColor = glGetAttribLocation( program, "vColor" ); 
+	glEnableVertexAttribArray( vColor );
+	glVertexAttribPointer( vColor, 4, GL_FLOAT, GL_FALSE, 0, BUFFER_OFFSET(sizeof(carColorsBuf)) );
+
+	glEnable( GL_DEPTH_TEST );
+    glDrawArrays( GL_TRIANGLES, 0, countOfFace[2]*3 );
+	glDisable( GL_DEPTH_TEST );
+}
 void drawCow( void )
 {
 	glPolygonMode( GL_FRONT_AND_BACK, GL_LINE );
 	Angel::mat4 modelMat = Angel::identity();
 
-	modelMat = modelMat *Angel::Translate((xMax[2]+xMin[2]+10.0), -(yMax[2]+yMin[2])/2+5.0, 
-				-sqrt(pow(xMax[2]-xMin[2],2)+pow(yMax[2]-yMin[2],2)+pow(zMax[2]-zMin[2],2))) * 
-					Angel::RotateY(90.0f) * Angel::RotateZ(90.0f);
-	modelMat = modelMat *Angel::Scale(0.7,0.7,0.7);
+	modelMat = modelMat *Angel::Translate(-(xMax[3]+xMin[3])/2, -(yMax[3]+yMin[3])/2, 
+				-sqrt(pow(xMax[3]-xMin[3],2)+pow(yMax[3]-yMin[3],2)+pow(zMax[3]-zMin[3],2))) * 
+					Angel::RotateX(0.0f)*Angel::RotateY(90.0f) * Angel::RotateZ(90.0f);
+	//modelMat = modelMat *Angel::Scale(0.7,0.7,0.7);
 
 	float modelMatrixf[16];
 	modelMatrixf[0] = modelMat[0][0];modelMatrixf[4] = modelMat[0][1];
@@ -638,8 +689,9 @@ void drawForest( void )
 {
 	drawGround();
 	drawCar();
+	drawSmallCar();
 	//drawCow();
-	for(int i = 0; i < 17; i++)
+	for(int i = 0; i < 13; i++)
 	{
 		drawTree(i%5);
 	}
