@@ -93,6 +93,8 @@
     <ClInclude Include="vec.h" />
   </ItemGroup>
   <ItemGroup>
+    <None Include="big_porsche.ply" />
+    <None Include="cow.ply" />
     <None Include="cylinder.ply" />
     <None Include="fshader1.glsl" />
     <None Include="lsys1.txt" />

@@ -1,14 +1,27 @@
-﻿Build started 10/25/2013 7:06:15 PM.
+﻿Build started 10/26/2013 8:55:46 PM.
      1>Project "C:\Users\hzhou\Documents\HW3\GLSLExperiment\GLSLExperiment.vcxproj" on node 2 (build target(s)).
      1>InitializeBuildStatus:
          Creating "Debug\GLSLExperiment.unsuccessfulbuild" because "AlwaysCreate" was specified.
        ClCompile:
          c:\Program Files (x86)\Microsoft Visual Studio 10.0\VC\bin\CL.exe /c /I..\glew\lib /I..\glew\include /I..\freeglut\include\GL /ZI /nologo /W3 /WX- /Od /Oy- /D _MBCS /Gm /EHsc /RTC1 /MDd /GS /fp:precise /Zc:wchar_t /Zc:forScope /Fo"Debug\\" /Fd"Debug\vc100.pdb" /Gd /TP /analyze- /errorReport:prompt example1.cpp
          example1.cpp
-     1>c:\users\hzhou\documents\hw3\glslexperiment\example1.cpp(202): warning C4018: '<' : signed/unsigned mismatch
-     1>c:\users\hzhou\documents\hw3\glslexperiment\example1.cpp(498): warning C4305: 'initializing' : truncation from 'double' to 'float'
-     1>c:\users\hzhou\documents\hw3\glslexperiment\example1.cpp(503): warning C4244: '=' : conversion from 'double' to 'GLfloat', possible loss of data
-     1>c:\users\hzhou\documents\hw3\glslexperiment\example1.cpp(581): warning C4244: 'argument' : conversion from 'time_t' to 'unsigned int', possible loss of data
+     1>c:\users\hzhou\documents\hw3\glslexperiment\example1.cpp(240): warning C4018: '<' : signed/unsigned mismatch
+     1>c:\users\hzhou\documents\hw3\glslexperiment\example1.cpp(336): warning C4244: 'argument' : conversion from 'double' to 'const GLfloat', possible loss of data
+     1>c:\users\hzhou\documents\hw3\glslexperiment\example1.cpp(338): warning C4305: 'argument' : truncation from 'double' to 'const GLfloat'
+     1>c:\users\hzhou\documents\hw3\glslexperiment\example1.cpp(338): warning C4305: 'argument' : truncation from 'double' to 'const GLfloat'
+     1>c:\users\hzhou\documents\hw3\glslexperiment\example1.cpp(338): warning C4305: 'argument' : truncation from 'double' to 'const GLfloat'
+     1>c:\users\hzhou\documents\hw3\glslexperiment\example1.cpp(372): warning C4244: 'argument' : conversion from 'double' to 'const GLfloat', possible loss of data
+     1>c:\users\hzhou\documents\hw3\glslexperiment\example1.cpp(372): warning C4244: 'argument' : conversion from 'double' to 'const GLfloat', possible loss of data
+     1>c:\users\hzhou\documents\hw3\glslexperiment\example1.cpp(374): warning C4305: 'argument' : truncation from 'double' to 'const GLfloat'
+     1>c:\users\hzhou\documents\hw3\glslexperiment\example1.cpp(374): warning C4305: 'argument' : truncation from 'double' to 'const GLfloat'
+     1>c:\users\hzhou\documents\hw3\glslexperiment\example1.cpp(374): warning C4305: 'argument' : truncation from 'double' to 'const GLfloat'
+     1>c:\users\hzhou\documents\hw3\glslexperiment\example1.cpp(488): warning C4244: 'argument' : conversion from 'int' to 'GLfloat', possible loss of data
+     1>c:\users\hzhou\documents\hw3\glslexperiment\example1.cpp(491): warning C4244: 'argument' : conversion from 'int' to 'GLfloat', possible loss of data
+     1>c:\users\hzhou\documents\hw3\glslexperiment\example1.cpp(495): warning C4244: 'argument' : conversion from 'double' to 'GLfloat', possible loss of data
+     1>c:\users\hzhou\documents\hw3\glslexperiment\example1.cpp(496): warning C4244: 'argument' : conversion from 'double' to 'GLfloat', possible loss of data
+     1>c:\users\hzhou\documents\hw3\glslexperiment\example1.cpp(683): warning C4305: 'initializing' : truncation from 'double' to 'float'
+     1>c:\users\hzhou\documents\hw3\glslexperiment\example1.cpp(688): warning C4244: '=' : conversion from 'double' to 'GLfloat', possible loss of data
+     1>c:\users\hzhou\documents\hw3\glslexperiment\example1.cpp(781): warning C4244: 'argument' : conversion from 'time_t' to 'unsigned int', possible loss of data
        Link:
          c:\Program Files (x86)\Microsoft Visual Studio 10.0\VC\bin\link.exe /ERRORREPORT:PROMPT /OUT:"C:\Users\hzhou\Documents\HW3\Debug\GLSLExperiment.exe" /NOLOGO /LIBPATH:..\glew\lib /LIBPATH:..\freeglut\lib freeglut.lib glew32.lib glew32s.lib opengl32.lib glu32.lib kernel32.lib user32.lib gdi32.lib winspool.lib comdlg32.lib advapi32.lib shell32.lib ole32.lib oleaut32.lib uuid.lib odbc32.lib odbccp32.lib /MANIFEST /ManifestFile:"Debug\GLSLExperiment.exe.intermediate.manifest" /MANIFESTUAC:"level='asInvoker' uiAccess='false'" /DEBUG /PDB:"C:\Users\hzhou\Documents\HW3\Debug\GLSLExperiment.pdb" /TLBID:1 /DYNAMICBASE /NXCOMPAT /IMPLIB:"C:\Users\hzhou\Documents\HW3\Debug\GLSLExperiment.lib" /MACHINE:X86 Debug\example1.obj
          Debug\InitShader.obj
@@ -24,4 +37,4 @@
 
 Build succeeded.
 
-Time Elapsed 00:00:01.13
+Time Elapsed 00:00:01.01

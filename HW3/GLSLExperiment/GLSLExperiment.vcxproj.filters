@@ -70,5 +70,11 @@
     <None Include="lsys5.txt">
       <Filter>Resource Files</Filter>
     </None>
+    <None Include="big_porsche.ply">
+      <Filter>Resource Files</Filter>
+    </None>
+    <None Include="cow.ply">
+      <Filter>Resource Files</Filter>
+    </None>
   </ItemGroup>
 </Project>
