@@ -714,6 +714,7 @@ void normalize( void )
 // keyboard handler
 void keyboard( unsigned char key, int x, int y )
 {
+	int flag = 1;
 	glClear( GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT );     // clear the window
 
     switch ( key ) 
@@ -748,17 +749,25 @@ void keyboard( unsigned char key, int x, int y )
 		case 033:
 			exit( EXIT_SUCCESS );
 			break;
+		default:
+			flag = 0;
+			break;
     }
-
-	/* Begin of DRAW */
-	drawTree(fileIndex);
-	flush();
-	/* End  of  DRAW */
+	if(flag == 1)
+	{
+		/* Begin of DRAW */
+		drawTree(fileIndex);
+		flush();
+		/* End  of  DRAW */
+	}
 }
 //----------------------------------------------------------------------------
 // entry point
 int main( int argc, char **argv )
 {
+	/* initial my linkList, and the first node is not used, so just store 'F' in it for fun */
+	ll->value = 'F';
+	ll->next = NULL;
 	/* load sphere and cylinder into array */
 	plyFileLoad(0);
 	plyFileLoad(1);
@@ -779,9 +788,7 @@ int main( int argc, char **argv )
     glutInitWindowSize( 800, 800 );
 	width = 800;
 	height = 800;
-	/* initial my linkList, and the first node is not used, so just store 'F' in it for fun */
-	ll->value = 'F';
-	ll->next = NULL;
+	
 
     glutInitContextVersion( 3, 1 );
     glutInitContextProfile( GLUT_CORE_PROFILE );
@@ -792,8 +799,6 @@ int main( int argc, char **argv )
     glewInit();
 
     generateGeometry();
-
-
 	// assign handlers
     glutDisplayFunc( display );
     glutKeyboardFunc( keyboard );
