@@ -58,6 +58,7 @@ float rotaionY = 0;
 float rotaionZ = 0;
 char start = 'F';
 char formula[32];
+// link list used to extend the formula for certain iterations
 linkList ll = (linkNode*)malloc(sizeof(linkNode));
 
 char fileName[5][10] = {"lsys1.txt","lsys2.txt","lsys3.txt","lsys4.txt","lsys5.txt"};
@@ -82,6 +83,7 @@ color4 cylinderColorsBuf[200];
 point4 groundPointsBuf[300];
 color4 groundColorsBuf[300];
 
+/* store current state for translation */
 point4 currentPoint;
 angle4 currentAngle;
 
@@ -221,6 +223,7 @@ void plyFileLoad(int fileIndex)
 	}
 	
 }
+//load L-systems file into memory
 void readFile(int index)
 {
 	char line[64];
@@ -240,6 +243,7 @@ void readFile(int index)
          fscanf(inStream, "%s",line);
          if(strcmp(line, "len:") == 0)
          {
+			 // load useful date into memory
              fscanf(inStream, "%d",&len);
 			 fscanf(inStream, "%s %d",line, &iteration);
 			 fscanf(inStream, "%s %f %f %f",line, &rotaionX, &rotaionY, &rotaionZ);
@@ -373,6 +377,7 @@ void drawCar( void )
 }
 void drawSmallCar( void )
 {
+	// randomize the location for small car
 	float xRand = RandomNumber(-7,-3);
 	float zRand = RandomNumber(-3,2);
 	color4 randColor = color4(RandomNumber(0,2.0), RandomNumber(0,2.0) , RandomNumber(0,2.0), 1.0f);
@@ -450,6 +455,7 @@ void drawCow( void )
     glDrawArrays( GL_TRIANGLES, 0, countOfFace[3]*3 );
 	glDisable( GL_DEPTH_TEST );
 }
+//extend the formula from L-systems file, and store it into a link list
 void do_iteration(int index)
 {
 	readFile(index);
@@ -480,6 +486,7 @@ void do_iteration(int index)
 		}
 	}
 }
+//return the length of the above link list (test use only)
 int get_count( void )
 {
 	linkList cursor = ll->next;
@@ -504,8 +511,6 @@ void generateGeometry( void )
     GLuint buffer;
     glGenBuffers( 1, &buffer );
     glBindBuffer( GL_ARRAY_BUFFER, buffer );
-	//
-	//
 
 	// Load shaders and use the resulting shader program
     program = InitShader( "vshader1.glsl", "fshader1.glsl" );
@@ -515,11 +520,6 @@ void generateGeometry( void )
     glEnableVertexAttribArray( vPosition );
     glVertexAttribPointer( vPosition, 4, GL_FLOAT, GL_FALSE, 0, BUFFER_OFFSET(0) );
 
-	/*
-    GLuint vColor = glGetAttribLocation( program, "vColor" ); 
-    glEnableVertexAttribArray( vColor );
-    glVertexAttribPointer( vColor, 4, GL_FLOAT, GL_FALSE, 0, BUFFER_OFFSET(sizeof(spherePointsBuf)) );
-	*/
 	// sets the default color to clear screen
     glClearColor( 0.0, 0.0, 0.0, 1.0 ); // white background
 }
@@ -539,6 +539,7 @@ void loadGround( void )
 		groundColorsBuf[i+1] = colorTmp;
 		groundPointsBuf[i+1] = point4(-350.0, y, -i*10/2 + 20, 1.0 );
 	}
+	/* x line */
 	for(int i = 0; i <= 70*2; i=i+2)
 	{
 		groundPointsBuf[122+i] = point4(i*5-350.0, y, 20, 1.0 );
@@ -728,6 +729,7 @@ void display( void )
 	drawTree(fileIndex);
 	flush();
 }
+// normalize cylinder and sphere, so that they have the same diameter, and the length of cylinder will be 1 (also change the start point of cylinder to the buttom).
 void normalize( void )
 {
 	static float var = 0.01; 
