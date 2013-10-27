@@ -390,7 +390,7 @@ void drawSmallCar( void )
 	
 	modelMat = modelMat *Angel::Translate((xMax[2]+xMin[2]+xRand), -(yMax[2]+yMin[2])/2-3.20, 
 				-sqrt(pow(xMax[2]-xMin[2],2)+pow(yMax[2]-yMin[2],2)+pow(zMax[2]-zMin[2],2))+zRand) * 
-					Angel::RotateY(90.0f) * Angel::RotateZ(90.0f);
+					Angel::RotateY(0.0f) * Angel::RotateZ(90.0f);
 	modelMat = modelMat *Angel::Scale(0.5,0.5,0.5);
 
 	float modelMatrixf[16];
