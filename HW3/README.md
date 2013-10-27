@@ -1,4 +1,4 @@
-1. How my program works:
+###1. How my program works:
 	1). When you start it, it will display the first tree in the screen[a small bug: the tree will be displayed, then clear, then be displayed again.]
 	2). Keyboard events "a", "b", "c", "d", "e" displays the 5 trees respectively. 
 	3). Keyboard events "r" displays a random tree. 
@@ -6,7 +6,7 @@
 	5). ATTENTION: I draw 13 trees in my park, so it will cost about 5 seconds, please be patient. Thanks! :-) 
 	6). If you have any question, you can contact me: hzhou@wpi.edu
 
-2. Description for each function in my source code:
+###2. Description for each function in my source code:
 	//default function
 	void generateGeometry( void );
 
