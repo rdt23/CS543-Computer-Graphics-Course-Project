@@ -674,9 +674,8 @@ void display( void )
 	GLuint viewMatrix = glGetUniformLocationARB(program, "projection_matrix");
 	glUniformMatrix4fv( viewMatrix, 1, GL_FALSE, viewMatrixf);
 	/* End of setup view matrix*/
-	glClear( GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT );     // clear the window
+
 	drawTree(fileIndex);
-	//drawTree(3);
 	flush();
 }
 void normalize( void )
@@ -715,65 +714,65 @@ void normalize( void )
 // keyboard handler
 void keyboard( unsigned char key, int x, int y )
 {
+	glClear( GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT );     // clear the window
+
     switch ( key ) 
 	{
 		case 'a':
 			fileIndex = 0;
-			glClear( GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT );     // clear the window
-			drawTree(fileIndex);
-			flush();
 			break;
 
 		case 'b':
 			fileIndex = 1;
-			glClear( GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT );     // clear the window
-			drawTree(fileIndex);
-			flush();
 			break;
 
 		case 'c':
 			fileIndex = 2;
-			glClear( GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT );     // clear the window
-			drawTree(fileIndex);
-			flush();
 			break;
 
 		case 'd':
 			fileIndex = 3;
-			glClear( GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT );     // clear the window
-			drawTree(fileIndex);
-			flush();
 			break;
 
 		case 'e':
 			fileIndex = 4;
-			glClear( GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT );     // clear the window
-			drawTree(fileIndex);
-			flush();
 			break;
 
 		case 'r':
 			fileIndex = rand() % 5;
-			glClear( GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT );     // clear the window
-			drawTree(fileIndex);
-			flush();
 			break;
 		case 'f':
-			glClear( GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT );     // clear the window
-			//drawForest();
 			fileIndex = -1;
-			drawTree(fileIndex);
-			flush();
 			break;
+
 		case 033:
 			exit( EXIT_SUCCESS );
 			break;
     }
+
+	/* Begin of DRAW */
+	drawTree(fileIndex);
+	flush();
+	/* End  of  DRAW */
 }
 //----------------------------------------------------------------------------
 // entry point
 int main( int argc, char **argv )
 {
+	/* load sphere and cylinder into array */
+	plyFileLoad(0);
+	plyFileLoad(1);
+	plyFileLoad(2);
+	//plyFileLoad(3);
+	loadGround();
+	/* normalize the points for sphere and cylinder, 
+	   so that they will be at the same scale */
+	normalize();
+	/* initialize random seed: */
+	srand (time(NULL));
+	/* initial current variables */
+	currentPoint.w = 1.0f;
+
 	// init glut
     glutInit( &argc, argv );
     glutInitDisplayMode( GLUT_RGBA | GLUT_DOUBLE | GLUT_DEPTH );
@@ -793,21 +792,7 @@ int main( int argc, char **argv )
     glewInit();
 
     generateGeometry();
-	/* load sphere and cylinder into array */
-	plyFileLoad(0);
-	plyFileLoad(1);
-	plyFileLoad(2);
-	//plyFileLoad(3);
-	loadGround();
-	/* normalize the points for sphere and cylinder, 
-	   so that they will be at the same scale */
-	normalize();
-	/* initialize random seed: */
-	srand (time(NULL));
-	/* initial current variables */
-	currentPoint.w = 1.0f;
-	currentAngle.w = 1.0f;
-	fileIndex = -1;
+
 
 	// assign handlers
     glutDisplayFunc( display );
