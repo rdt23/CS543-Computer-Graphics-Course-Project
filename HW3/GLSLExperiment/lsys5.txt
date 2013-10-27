@@ -26,4 +26,4 @@ len: 1
 iter: 3
 rot: 17 17 17
 start: F
-F: F[/^F+&F]+F
+F: F[/^F-&F]+F
