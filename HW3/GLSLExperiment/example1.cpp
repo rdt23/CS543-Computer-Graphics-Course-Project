@@ -78,8 +78,8 @@ point4 spherePointsBuf[1000];
 color4 sphereColorsBuf[1000];
 point4 cylinderPointsBuf[200];
 color4 cylinderColorsBuf[200];
-point4 groundPointsBuf[700];
-color4 groundColorsBuf[700];
+point4 groundPointsBuf[300];
+color4 groundColorsBuf[300];
 
 point4 currentPoint;
 angle4 currentAngle;
@@ -332,7 +332,7 @@ void drawCar( void )
 	glPolygonMode( GL_FRONT_AND_BACK, GL_LINE );
 	Angel::mat4 modelMat = Angel::identity();
 	
-	modelMat = modelMat *Angel::Translate((xMax[2]+xMin[2]+xRand), -(yMax[2]+yMin[2])/2-5.0, 
+	modelMat = modelMat *Angel::Translate((xMax[2]+xMin[2]+xRand), -(yMax[2]+yMin[2])/2-3.20, 
 				-sqrt(pow(xMax[2]-xMin[2],2)+pow(yMax[2]-yMin[2],2)+pow(zMax[2]-zMin[2],2))+zRand) * 
 					Angel::RotateY(90.0f) * Angel::RotateZ(90.0f);
 	modelMat = modelMat *Angel::Scale(0.7,0.7,0.7);
@@ -399,7 +399,6 @@ void drawCow( void )
     glDrawArrays( GL_TRIANGLES, 0, countOfFace[3]*3 );
 	glDisable( GL_DEPTH_TEST );
 }
-
 void do_iteration(int index)
 {
 	readFile(index);
@@ -430,7 +429,6 @@ void do_iteration(int index)
 		}
 	}
 }
-
 int get_count( void )
 {
 	linkList cursor = ll->next;
@@ -480,7 +478,7 @@ float RandomNumber(float Min, float Max)
 }
 void loadGround( void )
 {
-	float y = -8.00;
+	float y = -4.00;
 	color4 colorTmp = color4(0.0, 0.0, 1.0, 1.0);
 	/* z line */
 	for(int i = 0; i <= 60*2; i=i+2)
@@ -560,7 +558,7 @@ void drawTree( int fileIndex)
 		currentAngle.y = 0;
 		currentAngle.z = 0;
 
-		currentPoint.y = -10.0;
+		currentPoint.y = -5.0;
 		switch(fileIndex)
 		{
 			case 0:
@@ -641,7 +639,7 @@ void drawForest( void )
 	drawGround();
 	drawCar();
 	//drawCow();
-	for(int i = 0; i < 15; i++)
+	for(int i = 0; i < 17; i++)
 	{
 		drawTree(i%5);
 	}
