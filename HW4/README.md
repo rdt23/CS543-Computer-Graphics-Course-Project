@@ -1,9 +1,6 @@
- <H2 align=center>CS 543, Fall Semester 2013 Homework 4, Due by class time on Tuesday, November 19, 2013</H2>
+<H2 align=center>CS 543, Fall Semester 2013 Homework 4, Due by class time on Tuesday, November 19, 2013</H2>
 
 <P>
-<BLOCKQUOTE><!------------------------------------------------------------------>
-
-
 
 <br><br>
 <H2> Homework 4 Overview</H2>
@@ -41,7 +38,7 @@ vec4 v = vec4(normalize(cross(n,u)),0.0);
 In this project you shall load textures in the bmp file format and use them
 to texture parts of your scene.
 
-The following <a href="image_loading_example.zip">  [ Visual Studio solution ] </a>
+The following <a href="http://web.cs.wpi.edu/~emmanuel/courses/cs543/f13/homework/HW4/image_loading_example.zip">  [ Visual Studio solution ] </a>
 contains a working  program that reads in and displays a bmp file usain_bolt.bmp using
 the libbmpread library. To start off, download the Visual Studio Solution, compile it
 and run it. I have tested it and it works in the Zoolab. <br><br>
@@ -76,8 +73,8 @@ The specific features you shall implement in this homework are:
 
 <UL>
 <LI> <b> Texture the floor plane with grass or stone: </b> Texture map some grass onto the floor of your
-scene to make it look like grass is growing. Use the following grass texture <a href="grass.bmp"> [ grass.bmp ] </a>
-or make it look like the floor is paved with stone by texturing using a stone texture <a href="stones.bmp"> [ stones.bmp] </a> 
+scene to make it look like grass is growing. Use the following grass texture <a href="http://web.cs.wpi.edu/~emmanuel/courses/cs543/f13/homework/HW4/grass.bmp"> [ grass.bmp ] </a>
+or make it look like the floor is paved with stone by texturing using a stone texture <a href="http://web.cs.wpi.edu/~emmanuel/courses/cs543/f13/homework/HW4/stones.bmp"> [ stones.bmp] </a> 
 Use the libbmpread library above to read in your bmp texture files. 
 Do not try to stretch these small textures over
 a large floor. Map each texture to the bottom left corner of
@@ -97,12 +94,12 @@ scene should be updated as the camera moves. <br><br>
 cubemaps to your scene. The example in section 7.9 (page 393) of your text presents a 
 complete working example of an reflection map. The class slides present how to implement
 refraction. 
-Use the following cube map with its  <a href="env_map_sides.zip"> [ cube map sides in 6 images ]  </a>
+Use the following cube map with its  <a href="http://web.cs.wpi.edu/~emmanuel/courses/cs543/f13/homework/HW4/env_map_sides.zip"> [ cube map sides in 6 images ]  </a>
  as your environment map<br><br>
 
-For reference purposes, the complete environment map looks like this:
+For reference purposes, the complete environment map looks like this:<br/>
 
-<img border="0" src="nvlobby_all6.jpg" height="300">
+<img border="0" src="http://web.cs.wpi.edu/~emmanuel/courses/cs543/f13/homework/HW4/nvlobby_all6.jpg" height="300">
 
 
 
