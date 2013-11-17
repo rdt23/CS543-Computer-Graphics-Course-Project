@@ -1,18 +1,9 @@
-<H2 align=center>CS 543, Fall Semester 2013 Homework 4, Due by class time on Tuesday, November 19, 2013</H2>
+CS 543, Fall Semester 2013 Homework 4, Due by class time on Tuesday, November 19, 2013
 
 <P>
-
-<br><br>
 <H2> Homework 4 Overview</H2>
-
-<p> In this project you will add more realism to your park scene (with L-System trees) from
-homework 3, by adding texturing, shadows and fog</p>
-
-
-
-<br><br>
+<p> In this project you will add more realism to your park scene (with L-System trees) from homework 3, by adding texturing, shadows and fog</p>
 <H2> Homework 4 Preparation </H2>
-
 <ul>
 <LI> <b> Make a slight change to the lookAt function in your current mat.h: </b> The lookAt function that you 
 currently have in mat.h may have slight artifacts if you try to build on it. 
