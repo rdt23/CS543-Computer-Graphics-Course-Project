@@ -120,10 +120,10 @@ bmpread_t bitmap;
 static  GLuint  texture = 0;
 vec2 textureCoordinates[6] = {
 		vec2(0.0,0.0),
-		vec2(0.0,1.0),
-		vec2(1.0,1.0),
-		vec2(1.0,1.0),
-		vec2(1.0,0.0),
+		vec2(0.0,10.0),
+		vec2(10.0,10.0),
+		vec2(10.0,10.0),
+		vec2(10.0,0.0),
 		vec2(0.0,0.0)
 	};
 point4 pointsGround[6] = {
@@ -532,54 +532,27 @@ void init( void )
     glVertexAttribPointer( vPosition, 4, GL_FLOAT, GL_FALSE, 0, BUFFER_OFFSET(0) );
 
     // Since our texture coordinates match our vertex positions, we
-    //   can reuse the position data for our texture coordinates.
+    // can reuse the position data for our texture coordinates.
     GLuint vTexCoord = glGetAttribLocation( program, "vTexCoord" ); 
     glEnableVertexAttribArray( vTexCoord );
     glVertexAttribPointer( vTexCoord, 2, GL_FLOAT, GL_FALSE, 0, BUFFER_OFFSET(sizeof(pointsGround)) );
 
-    Projection = glGetUniformLocationARB( program, "Projection" );
 
     // Set our texture samples to the active texture unit
     glUniform1i( glGetUniformLocation(program, "texture"), 0 );
     glBindTexture(GL_TEXTURE_2D, texture);
 	// sets the default color to clear screen
-
 	
-	
-	
-	//glBufferData( GL_ARRAY_BUFFER, sizeof(pointsGround) , NULL, GL_STATIC_DRAW );
-	//glPolygonMode( GL_FRONT_AND_BACK, GL_LINE );
-	glPolygonMode( GL_FRONT_AND_BACK, GL_FILL );
-	glEnable( GL_DEPTH_TEST );
-    glDrawArrays( GL_TRIANGLES, 0, 6); 
-	glDisable( GL_DEPTH_TEST );
+	//glPolygonMode( GL_FRONT_AND_BACK, GL_FILL );
+	//glEnable( GL_DEPTH_TEST );
+	//glDrawArrays( GL_TRIANGLES, 0, 6); 
+	//glDisable( GL_DEPTH_TEST );
 
     glClearColor( 1.0, 1.0, 1.0, 1.0 ); // white background
 }
 float RandomNumber(float Min, float Max)
 {
     return ((float(rand()) / float(RAND_MAX)) * (Max - Min)) + Min;
-}
-void loadGround( void )
-{
-	float y = -4.00;
-	color4 colorTmp = color4(0.0, 0.0, 1.0, 1.0);
-	/* z line */
-	for(int i = 0; i <= 60*2; i=i+2)
-	{
-		groundPointsBuf[i] = point4(350.0, y, -i*10/2 + 20, 1.0 );
-		groundColorsBuf[i] = colorTmp;
-		groundColorsBuf[i+1] = colorTmp;
-		groundPointsBuf[i+1] = point4(-350.0, y, -i*10/2 + 20, 1.0 );
-	}
-	/* x line */
-	for(int i = 0; i <= 70*2; i=i+2)
-	{
-		groundPointsBuf[122+i] = point4(i*5-350.0, y, 20, 1.0 );
-		groundPointsBuf[122+i+1] = point4(i*5-350.0, y, -580, 1.0 );
-		groundColorsBuf[122+i] = colorTmp;
-		groundColorsBuf[122+i+1] = colorTmp;
-	}
 }
 void drawGround( void )
 {
@@ -724,7 +697,6 @@ void drawForest( void )
 	drawGround();
 	drawCar();
 	drawSmallCar();
-	//drawCow();
 	for(int i = 0; i < 3; i++)
 	{
 		drawTree(i%5);
@@ -796,20 +768,31 @@ void flush( void )
 //
 //	//drawTree(fileIndex);
 //	//flush();
-//	//glPolygonMode( GL_FRONT_AND_BACK, GL_FILL );
-//	//glClear( GL_COLOR_BUFFER_BIT );
-// //   glDrawArrays( GL_TRIANGLES, 0, 6 );
-//    //glutSwapBuffers();
 //}
 void display()
 {
+	mat4 modelMat;
+	mat4 viewMat = LookAt( vec4(0,30,100,1), vec4(0,0,0,1), vec4(0,1,0,0) );
+	modelMat = modelMat * Angel::Translate(0 , -10.0 ,0) * Angel::RotateZ(0) * Angel::RotateY(0) * Angel::RotateX(0);
+	mat4 m = viewMat * modelMat;
+
+    GLuint modelMatrix = glGetUniformLocationARB(program, "model_matrix");
+    glUniformMatrix4fv( modelMatrix, 1, GL_TRUE, m );
+	
+
+	Angel::mat4 perspectiveMat = Angel::Perspective((GLfloat)60.0, (GLfloat)width/(GLfloat)height, (GLfloat)0.1, (GLfloat) 1000.0);
+    Projection = glGetUniformLocationARB( program, "Projection" );
+	glUniformMatrix4fv( Projection, 1, GL_TRUE, perspectiveMat);
 	glBufferData( GL_ARRAY_BUFFER, sizeof(pointsGround) + sizeof(textureCoordinates), NULL, GL_STATIC_DRAW );
 	glBufferSubData( GL_ARRAY_BUFFER, 0, sizeof(pointsGround), pointsGround );
 	glBufferSubData( GL_ARRAY_BUFFER, sizeof(pointsGround), sizeof(textureCoordinates), textureCoordinates );
+	
+
 
     glClear( GL_COLOR_BUFFER_BIT );
     glDrawArrays( GL_TRIANGLES, 0, 6 );
-    glutSwapBuffers();
+	//drawTree(1);
+    flush();
 }
  //normalize cylinder and sphere, so that they have the same diameter, and the length of cylinder will be 1 (also change the start point of cylinder to the buttom).
 void normalize( void )
@@ -843,29 +826,7 @@ void normalize( void )
 	zMax[1] = xMax[1];
 	zMin[1] = -xMax[1];
 }
-//----------------------------------------------------------------------------
-void reshape( int width, int height )
-{
-	/*
-    glViewport( 0, 0, width, height );
-    mat4 projection = Ortho( 0.0, 1.0, 0.0, 1.0, -1.0, 1.0 );
-    glUniformMatrix4fv( Projection, 1, GL_TRUE, projection );
-	*/
-	
-	mat4 modelMat;
-	mat4 viewMat = LookAt( vec4(0,30,100,1), vec4(0,0,0,1), vec4(0,1,0,0) );
-	modelMat = modelMat * Angel::Translate(0 , -0.0 ,0) * Angel::RotateZ(0) * Angel::RotateY(0) * Angel::RotateX(0);
-	mat4 m = viewMat * modelMat;
 
-    GLuint modelMatrix = glGetUniformLocationARB(program, "model_matrix");
-    glUniformMatrix4fv( modelMatrix, 1, GL_TRUE, m );
-	
-	Angel::mat4 perspectiveMat = Angel::Perspective((GLfloat)60.0, (GLfloat)width/(GLfloat)height, (GLfloat)0.1, (GLfloat) 9998.0);
-
-	//GLuint projectionMatrix = glGetUniformLocationARB(program, "projection_matrix");
-	glUniformMatrix4fv( Projection, 1, GL_TRUE, perspectiveMat);
-	
-}
 // keyboard handler
 void keyboard( unsigned char key, int x, int y )
 {
@@ -924,14 +885,14 @@ int main( int argc, char **argv )
 	ll->value = 'F';
 	ll->next = NULL;
 	/* load sphere and cylinder into array */
-	//plyFileLoad(0);
-	//plyFileLoad(1);
-	//plyFileLoad(2);
+	plyFileLoad(0);
+	plyFileLoad(1);
+	plyFileLoad(2);
 	//loadGround();
 	//drawGround();
 	/* normalize the points for sphere and cylinder, 
 	   so that they will be at the same scale */
-	//normalize();
+	normalize();
 	/* initialize random seed: */
 	srand (time(NULL));
 	/* initial current variables */
@@ -955,8 +916,7 @@ int main( int argc, char **argv )
 	// assign handlers
     glutDisplayFunc( display );
     glutKeyboardFunc( keyboard );
-	glutReshapeFunc( reshape );
-
+	
     glutMainLoop();
     return 0;
 }
