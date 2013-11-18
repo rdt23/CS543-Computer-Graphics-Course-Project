@@ -18,4 +18,15 @@ void main()
     gl_Position = Projection * model_matrix * vPosition;
 	interpolatedColor = vColor;
 	zValue = gl_Position.z;
+
+	/*
+	vec4 eyePos = eyeMatrix; 
+	// calculate view vector V
+	vec4 NN = ModelView*Normal; 
+	// transform normal
+	vec3 N =normalize(NN.xyz); 
+	// normalize normal
+	R = reflect(eyePos.xyz, N); 
+	// calculate reflection vector R
+	*/
 }

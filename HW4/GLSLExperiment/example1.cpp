@@ -25,7 +25,9 @@ void flush( void );
 void drawForest( void );
 void drawGround( void );
 void drawCar( void );
+void drawBox( void );
 void setAndLoadTexture( int );
+void cubeMapInit( void );
 
 typedef Angel::vec4  color4;
 typedef Angel::vec4  point4;
@@ -88,10 +90,10 @@ char formula[32];
 linkList ll = (linkNode*)malloc(sizeof(linkNode));
 
 char fileName[5][10] = {"lsys1.txt","lsys2.txt","lsys3.txt","lsys4.txt","lsys5.txt"};
-char plyFileName[3][20] = {"cylinder.ply","sphere.ply","big_porsche.ply"};
+char plyFileName[4][20] = {"cylinder.ply","sphere.ply","big_porsche.ply", "box.ply"};
 char textureFileName[2][15] = {"grass.bmp","stones.bmp"};
 static int countOfVertex[3];
-static int countOfFace[3]; 
+static int countOfFace[4]; 
 
 //store points from ply files
 point4 points[6000];
@@ -105,6 +107,9 @@ point4 spherePointsBuf[1000];
 color4 sphereColorsBuf[1000];
 point4 cylinderPointsBuf[200];
 color4 cylinderColorsBuf[200];
+point4 boxPointsBuf[36];
+color4 boxColorsBuf[36];
+
 
 /* store current state for translation */
 point4 currentPoint;
@@ -131,93 +136,18 @@ point4 pointsGround[6] = {
 	point4(  200.0, 0.0, -500.0, 1.0 ),
 	point4( -200.0, 0.0, -500.0, 1.0 )
     };
-
-mat4 viewMat = LookAt(vec4(0,37,70,1), vec4(0,0,0,1), vec4(0,1,0,0));
+vec4 eyeMatrix = vec4(0,37,70,1);
+mat4 viewMat = LookAt(eyeMatrix, vec4(0,0,0,1), vec4(0,1,0,0));
 
 int fogParameter = 0;// [used in shader] - 0:diable; 1:enabled with liner increment; 2:enabled with exponential increment
 int enableShadows = 0;
 float light[3] = {70,300,-200}; // location of light
+
 /*********************************************/
-const int NumVertices = 36; //(6 faces)(2 triangles/face)(3 vertices/triangle)
 
-point4 cubePoints[NumVertices];
-color4 cubeColors[NumVertices];
-
-// Vertices of a unit cube centered at origin, sides aligned with axes
-point4 vertices[8] = {
-    point4( -0.5, -0.5,  0.5, 1.0 ),
-    point4( -0.5,  0.5,  0.5, 1.0 ),
-    point4(  0.5,  0.5,  0.5, 1.0 ),
-    point4(  0.5, -0.5,  0.5, 1.0 ),
-    point4( -0.5, -0.5, -0.5, 1.0 ),
-    point4( -0.5,  0.5, -0.5, 1.0 ),
-    point4(  0.5,  0.5, -0.5, 1.0 ),
-    point4(  0.5, -0.5, -0.5, 1.0 )
-};
-// RGBA olors
-color4 vertex_colors[8] = {
-    color4( 0.0, 0.0, 0.0, 1.0 ),  // black
-    color4( 1.0, 0.0, 0.0, 1.0 ),  // red
-    color4( 1.0, 1.0, 0.0, 1.0 ),  // yellow
-    color4( 0.0, 1.0, 0.0, 1.0 ),  // green
-    color4( 0.0, 0.0, 1.0, 1.0 ),  // blue
-    color4( 1.0, 0.0, 1.0, 1.0 ),  // magenta
-    color4( 1.0, 1.0, 1.0, 1.0 ),  // white
-    color4( 0.0, 1.0, 1.0, 1.0 )   // cyan
-};
-// quad generates two triangles for each face and assigns colors
-//    to the vertices
-int Index = 0;
 point4 normals[6];
 vec4 normal;
 
-void quad( int a, int b, int c, int d )
-{
-    cubeColors[Index] = vertex_colors[a]; cubePoints[Index] = vertices[a]; Index++;
-    cubeColors[Index] = vertex_colors[b]; cubePoints[Index] = vertices[b]; Index++;
-    cubeColors[Index] = vertex_colors[c]; cubePoints[Index] = vertices[c]; Index++;
-    cubeColors[Index] = vertex_colors[a]; cubePoints[Index] = vertices[a]; Index++;
-    cubeColors[Index] = vertex_colors[c]; cubePoints[Index] = vertices[c]; Index++;
-    cubeColors[Index] = vertex_colors[d]; cubePoints[Index] = vertices[d]; Index++;
-
-	static int i =0;
-	normal = normalize(cross(vertices[b] - vertices[a],	vertices[c] - vertices[b]));
-
-	normals[i] = normal;
-	points[i] = vertices[a];
-	i++;
-
-	normals[i] = normal;
-	points[i] = vertices[a];
-	i++;
-
-	normals[i] = normal;
-	points[i] = vertices[a];
-	i++;
-
-	normals[i] = normal;
-	points[i] = vertices[a];
-	i++;
-
-	normals[i] = normal;
-	points[i] = vertices[a];
-	i++;
-
-	normals[i] = normal;
-	points[i] = vertices[a];
-	i++;
-
-}
-// generate 12 triangles: 36 vertices and 36 colors
-void colorcube()
-{
-    quad( 1, 0, 3, 2 );
-    quad( 2, 3, 7, 6 );
-    quad( 3, 0, 4, 7 );
-    quad( 6, 5, 1, 2 );
-    quad( 4, 5, 6, 7 );
-    quad( 5, 4, 0, 1 );
-}
 /*********************************************/
 void setAndLoadTexture( int textureIndex )
 {
@@ -326,9 +256,6 @@ void plyFileLoad(int fileIndex)
 				cylinderPointsBuf[i] = points[face[i/3].vertex1];
 				cylinderPointsBuf[i+1] = points[face[i/3].vertex2];
 				cylinderPointsBuf[i+2] = points[face[i/3].vertex3];
-				cylinderColorsBuf[i] = color4( 0.0, 1.0, 0.0, 1.0 );
-				cylinderColorsBuf[i+1] = color4( 0.0, 1.0, 0.0, 1.0 );
-				cylinderColorsBuf[i+2] = color4( 0.0, 1.0, 0.0, 1.0 );
 			}
 			break;
 		case 1:
@@ -337,9 +264,6 @@ void plyFileLoad(int fileIndex)
 				spherePointsBuf[i] = points[face[i/3].vertex1];
 				spherePointsBuf[i+1] = points[face[i/3].vertex2];
 				spherePointsBuf[i+2] = points[face[i/3].vertex3];
-				sphereColorsBuf[i] = color4( 0.0, 1.0, 0.0, 1.0 );
-				sphereColorsBuf[i+1] = color4( 0.0, 1.0, 0.0, 1.0 );
-				sphereColorsBuf[i+2] = color4( 0.0, 1.0, 0.0, 1.0 );
 			}
 			break;
 		case 2:
@@ -348,6 +272,14 @@ void plyFileLoad(int fileIndex)
 				carPointsBuf[i] = points[face[i/3].vertex1];
 				carPointsBuf[i+1] = points[face[i/3].vertex2];
 				carPointsBuf[i+2] = points[face[i/3].vertex3];
+			}
+			break;
+		case 3:
+			for(int i = 0; i < countOfFace[fileIndex]*3; i=i+3)
+			{
+				boxPointsBuf[i] = points[face[i/3].vertex1];
+				boxPointsBuf[i+1] = points[face[i/3].vertex2];
+				boxPointsBuf[i+2] = points[face[i/3].vertex3];
 			}
 			break;
 		default:
@@ -546,6 +478,63 @@ void drawCar( void )
 	}
 
 }
+void drawBox( void )
+{
+	for(int i = 0; i < countOfFace[3]*3; i++)
+	{
+		boxColorsBuf[i] = color4(0.0, 1.0, 1.0, 1.0 );
+	}
+
+	glPolygonMode( GL_FRONT_AND_BACK, GL_LINE );
+	Angel::mat4 modelMat = Angel::identity();
+	mat4 m; // shadow projection matrix initially identity
+	m[3][1] = -1.0/light[1]; 
+	m[3][3] = 0;
+	
+	modelMat = modelMat *Angel::Translate(-0, 15, 20) * Angel::RotateY(90.0f) * Angel::RotateZ(90.0f);
+	modelMat = modelMat *Angel::Scale(7,7,7);
+	Angel::mat4 shadowsModelView = viewMat * Translate(0, 1, 0) * Translate(light[0], light[1], light[2]) * m * Translate(-light[0], -light[1], -light[2]) * modelMat;
+	modelMat = viewMat * modelMat;
+	
+	// set up projection matricies
+	GLuint modelMatrix = glGetUniformLocationARB(program, "model_matrix");
+	glUniformMatrix4fv( modelMatrix, 1, GL_TRUE, modelMat );
+
+	glBufferData( GL_ARRAY_BUFFER, sizeof(boxPointsBuf) + sizeof(boxColorsBuf), NULL, GL_STATIC_DRAW );
+	glBufferSubData( GL_ARRAY_BUFFER, 0, sizeof(boxPointsBuf), boxPointsBuf );
+	glBufferSubData( GL_ARRAY_BUFFER, sizeof(boxPointsBuf), sizeof(boxColorsBuf), boxColorsBuf );
+
+	GLint enableTreeColor = glGetUniformLocation(program, "enableTreeColor");
+    glUniform1i( enableTreeColor, 1);
+
+	GLuint vColor = glGetAttribLocation( program, "vColor" ); 
+	glEnableVertexAttribArray( vColor );
+	glVertexAttribPointer( vColor, 4, GL_FLOAT, GL_FALSE, 0, BUFFER_OFFSET(sizeof(boxColorsBuf)) );
+
+	glEnable( GL_DEPTH_TEST );
+    glDrawArrays( GL_TRIANGLES, 0, countOfFace[3]*3 );
+	glDisable( GL_DEPTH_TEST );
+
+	if(enableShadows == 1)
+	{
+		GLuint shadowModelMatrix = glGetUniformLocationARB(program, "model_matrix");
+		glUniformMatrix4fv( shadowModelMatrix, 1, GL_TRUE, shadowsModelView );
+
+		for(int i = 0; i < countOfFace[3]*3; i++)
+		{
+			boxColorsBuf[i] = color4(0.0, 0.0, 0.0, 1.0); 
+		}
+
+		glBufferData( GL_ARRAY_BUFFER, sizeof(boxPointsBuf) + sizeof(boxColorsBuf), NULL, GL_STATIC_DRAW );
+		glBufferSubData( GL_ARRAY_BUFFER, 0, sizeof(boxPointsBuf), boxPointsBuf );
+		glBufferSubData( GL_ARRAY_BUFFER, sizeof(boxPointsBuf), sizeof(boxColorsBuf), boxColorsBuf );
+
+		glEnable( GL_DEPTH_TEST );
+		glDrawArrays( GL_TRIANGLES, 0, countOfFace[3]*3 );
+		glDisable( GL_DEPTH_TEST );
+	}
+}
+
 //extend the formula from L-systems file, and store it into a link list
 void doIteration(int index)
 {
@@ -581,7 +570,7 @@ void doIteration(int index)
 
 void init( void )
 {	
-	colorcube();
+	//colorcube();
     // Create a vertex array object
     GLuint vao;
     glGenVertexArrays( 1, &vao );
@@ -595,6 +584,8 @@ void init( void )
     // Load shaders and use the resulting shader program
     program = InitShader( "vshader1.glsl", "fshader1.glsl" );
     glUseProgram( program );
+
+	cubeMapInit();
 
     // set up vertex arrays
     GLuint vPosition = glGetAttribLocation( program, "vPosition" );
@@ -794,6 +785,7 @@ void display()
 	setAndLoadTexture(textureIndex);
     drawGround();
 	drawCar();
+	drawBox();
 	drawTree(-1);
     flush();
 }
@@ -830,35 +822,36 @@ void normalize( void )
 	zMin[1] = -xMax[1];
 }
 
-void cubeMap( void )
+void cubeMapInit( void )
 {
+	bmpread_t bitmap1, bitmap2, bitmap3, bitmap4, bitmap5, bitmap6;
 	GLuint texMapLocation;
 	GLuint tex[1];
+	bmpread("nvnegx.bmp", 0, &bitmap1);
+	bmpread("nvnegy.bmp", 0, &bitmap2);
+	bmpread("nvnegz.bmp", 0, &bitmap3);
+	bmpread("nvposx.bmp", 0, &bitmap4);
+	bmpread("nvposy.bmp", 0, &bitmap5);
+	bmpread("nvposz.bmp", 0, &bitmap6);
 
-	// colors for sides of cube
-	GLubyte red[3] = {255, 0, 0};
-	GLubyte green[3] = {0, 255, 0};
-	GLubyte blue[3] = {0, 0, 255};
-	GLubyte cyan[3] = {0, 255, 255};
-	GLubyte magenta[3] = {255, 0, 255};
-	GLubyte yellow[3] = {255, 255, 0};
 	glEnable(GL_TEXTURE_CUBE_MAP);
 	// Create texture object
 	glGenTextures(1, tex);
 	glActiveTexture(GL_TEXTURE1);
 	glBindTexture(GL_TEXTURE_CUBE_MAP, tex[0]);
 
-	glTexImage2D(GL_TEXTURE_CUBE_MAP_POSITIVE_X ,0,3,1,1,0,GL_RGB,GL_UNSIGNED_BYTE, red);
-	glTexImage2D(GL_TEXTURE_CUBE_MAP_NEGATIVE_X ,0,3,1,1,0,GL_RGB,GL_UNSIGNED_BYTE, green);
-	glTexImage2D(GL_TEXTURE_CUBE_MAP_POSITIVE_Y ,0,3,1,1,0,GL_RGB,GL_UNSIGNED_BYTE, blue);
-	glTexImage2D(GL_TEXTURE_CUBE_MAP_NEGATIVE_Y ,0,3,1,1,0,GL_RGB,GL_UNSIGNED_BYTE, cyan);
-	glTexImage2D(GL_TEXTURE_CUBE_MAP_POSITIVE_Z ,0,3,1,1,0,GL_RGB,GL_UNSIGNED_BYTE, magenta);
-	glTexImage2D(GL_TEXTURE_CUBE_MAP_NEGATIVE_Z ,0,3,1,1,0,GL_RGB,GL_UNSIGNED_BYTE, yellow);
-	glTexParameteri(GL_TEXTURE_CUBE_MAP,GL_TEXTURE_MAG_FILTER,GL_NEAREST);
+	glTexImage2D(GL_TEXTURE_CUBE_MAP_POSITIVE_X ,0, GL_RGB, bitmap1.width, bitmap1.height, 0, GL_RGB, GL_UNSIGNED_BYTE, bitmap1.rgb_data);
+	glTexImage2D(GL_TEXTURE_CUBE_MAP_NEGATIVE_X ,0, GL_RGB, bitmap2.width, bitmap2.height, 0, GL_RGB, GL_UNSIGNED_BYTE, bitmap2.rgb_data);
+	glTexImage2D(GL_TEXTURE_CUBE_MAP_POSITIVE_Y ,0, GL_RGB, bitmap3.width, bitmap3.height, 0, GL_RGB, GL_UNSIGNED_BYTE, bitmap3.rgb_data);
+	glTexImage2D(GL_TEXTURE_CUBE_MAP_NEGATIVE_Y ,0, GL_RGB, bitmap4.width, bitmap4.height, 0, GL_RGB, GL_UNSIGNED_BYTE, bitmap4.rgb_data);
+	glTexImage2D(GL_TEXTURE_CUBE_MAP_POSITIVE_Z ,0, GL_RGB, bitmap5.width, bitmap5.height, 0, GL_RGB, GL_UNSIGNED_BYTE, bitmap5.rgb_data);
+	glTexImage2D(GL_TEXTURE_CUBE_MAP_NEGATIVE_Z ,0, GL_RGB, bitmap6.width, bitmap6.height, 0, GL_RGB, GL_UNSIGNED_BYTE, bitmap6.rgb_data);
 
+	glTexParameteri(GL_TEXTURE_CUBE_MAP,GL_TEXTURE_MAG_FILTER,GL_NEAREST);
 
 	texMapLocation = glGetUniformLocation(program, "texMap"); 
 	glUniform1i(texMapLocation, tex[0]);
+
 
 
 }
@@ -904,6 +897,7 @@ int main( int argc, char **argv )
 	plyFileLoad(0);
 	plyFileLoad(1);
 	plyFileLoad(2);
+	plyFileLoad(3);
 	/* normalize the points for sphere and cylinder, 
 	   so that they will be at the same scale */
 	normalize();
