@@ -135,6 +135,8 @@ point4 pointsGround[6] = {
 
 mat4 viewMat = LookAt(vec4(0,0,70,1), vec4(0,0,0,1), vec4(0,1,0,0));
 
+int fogParameter = 0;// [used in shader] - 0:diable; 1:enabled with liner increment; 2:enabled with exponential increment
+
 //load info from ply file into arrays
 void plyFileLoad(int fileIndex)
 {
@@ -537,7 +539,7 @@ void init( void )
     glBindTexture(GL_TEXTURE_2D, texture);
 	// sets the default color to clear screen
 
-    glClearColor( 0.0, 0.0, 0.0, 1.0 ); // white background
+    glClearColor( 1.0, 1.0, 1.0, 1.0 ); // white background
 }
 float RandomNumber(float Min, float Max)
 {
@@ -684,7 +686,12 @@ void display()
 {
 	Angel::mat4 perspectiveMat = Angel::Perspective((GLfloat)90.0, (GLfloat)width/(GLfloat)height, (GLfloat)0.1, (GLfloat) 9998.0);
     Projection = glGetUniformLocationARB( program, "Projection" );
+
 	glUniformMatrix4fv( Projection, 1, GL_TRUE, perspectiveMat);
+	GLint enableFogWithSpecialIncrement = glGetUniformLocation(program, "enableFogWithSpecialIncrement");
+    glUniform1i( enableFogWithSpecialIncrement, fogParameter);
+
+	printf("fogParameter = %d\n", fogParameter);
 
     drawGround();
 	drawTree(-1);
@@ -731,6 +738,7 @@ void keyboard( unsigned char key, int x, int y )
     switch ( key ) 
 	{
 		case 'f':
+			fogParameter = (fogParameter+1) % 3;
 			display();
 			break;
 
