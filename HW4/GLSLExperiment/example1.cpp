@@ -16,7 +16,6 @@ void keyboard( unsigned char, int, int );
 void plyFileLoad(int);
 void readFile(int);
 void do_iteration(int);
-int get_count( void );
 void normalize( void );
 void drawTree( int );
 float RandomNumber(float , float );
@@ -26,7 +25,6 @@ void flush( void );
 void drawForest( void );
 void drawGround( void );
 void drawCar( void );
-void drawCow( void );
 void drawSmallCar( void );
 void setAndLoadTexture( int );
 
@@ -138,6 +136,8 @@ point4 pointsGround[6] = {
 mat4 viewMat = LookAt(vec4(0,0,70,1), vec4(0,0,0,1), vec4(0,1,0,0));
 
 int fogParameter = 0;// [used in shader] - 0:diable; 1:enabled with liner increment; 2:enabled with exponential increment
+int enableShadows = 0;
+float light[3] = {70,600,-20}; // location of light
 
 void setAndLoadTexture( int texttureIndex )
 {
@@ -350,16 +350,29 @@ void drawSphere( void )
 void drawCylinder( void )
 {
 	glPolygonMode( GL_FRONT_AND_BACK, GL_LINE );
+
+	point4 shadowPoint[2];
+	mat4 m; // shadow projection matrix initially identity
+	m[3][1] = -1.0/light[1]; 
+	m[3][3] = 0; 
+	Angel::mat4 shadowsModelView = Translate(light[0], light[1], light[2]) * m * Translate(-light[0], -light[1], -light[2]);
+
 	Angel::mat4 modelMat = Angel::identity();
-	//mat4 viewMat = LookAt(vec4(0,0,100,1), vec4(0,0,0,1), vec4(0,1,0,0));
-	modelMat = modelMat * Angel::Translate(currentPoint.x , currentPoint.y , currentPoint.z) * Angel::RotateZ(currentAngle.z) * Angel::RotateY(currentAngle.y-90.0f) * Angel::RotateX(currentAngle.x);
-	
+	modelMat = modelMat * Angel::Translate(currentPoint.x , currentPoint.y , currentPoint.z) 
+						* Angel::RotateZ(currentAngle.z) * Angel::RotateY(currentAngle.y-90.0f) * Angel::RotateX(currentAngle.x);
+
+	// for draw shadows use
+	shadowPoint[0] = shadowsModelView * currentPoint;
+
 	// update currentPoint now
-	currentPoint = modelMat*point4(0,1.0f,0,1);
+	currentPoint = modelMat * point4(0,1.0f,0,1);
 	modelMat = viewMat * modelMat;
 	//currentAngle.w = 1.0f;
 	currentPoint.w = 1.0f;
 	
+	// for draw shadows use
+	shadowPoint[1] = shadowsModelView * currentPoint;
+
 	// set up projection matricies
 	GLuint modelMatrix = glGetUniformLocationARB(program, "model_matrix");
 	glUniformMatrix4fv( modelMatrix, 1, GL_TRUE, modelMat );
@@ -379,6 +392,18 @@ void drawCylinder( void )
     glDrawArrays( GL_TRIANGLES, 0, countOfFace[0]*3 );
 	glDisable( GL_DEPTH_TEST );
 
+	if(enableShadows == 1)
+	{
+		shadowPoint[0].y -= 10;
+		shadowPoint[1].y -= 10;
+		GLuint shadowModelMatrix = glGetUniformLocationARB(program, "model_matrix");
+		glUniformMatrix4fv( shadowModelMatrix, 1, GL_TRUE, shadowsModelView );
+		glBufferData( GL_ARRAY_BUFFER, sizeof(shadowPoint) , shadowPoint, GL_STATIC_DRAW );
+
+		glEnable( GL_DEPTH_TEST );
+		glDrawArrays( GL_LINES, 0, 2 );
+		glDisable( GL_DEPTH_TEST );
+	}
 
 }
 void drawCar( void )
@@ -499,19 +524,7 @@ void do_iteration(int index)
 	}
 }
 //return the length of the above link list (test use only)
-int get_count( void )
-{
-	linkList cursor = ll->next;
-	int count = 0;
-	while(cursor != NULL)
-	{
-		count ++;
-		//printf("%c",cursor->value);
-		cursor = cursor->next;
-		
-	}
-	return count;
-}
+
 void init( void )
 {	
     // Create a vertex array object
@@ -584,11 +597,11 @@ void drawTree( int fileIndex)
 		currentAngle.y = 0;
 		currentAngle.z = 0;
 
-		currentPoint.y = -20.0;
+		currentPoint.y = -10.0;
 		switch(fileIndex)
 		{
 			case 0:
-				currentPoint.y = -25.0;
+				currentPoint.y = -20.0;
 				currentPoint.x = -77;
 				currentPoint.z = -227;
 				for(int i = 0; i < countOfFace[0]*3; i++)
@@ -710,8 +723,8 @@ void display()
 	//printf("fogParameter = %d\n", fogParameter);
 
 	setAndLoadTexture(textureIndex);
-
     drawGround();
+
 	drawTree(-1);
     flush();
 }
@@ -755,6 +768,11 @@ void keyboard( unsigned char key, int x, int y )
 
     switch ( key ) 
 	{
+		case 'd':
+			enableShadows = (enableShadows+1) % 2;
+			display();
+			break;
+
 		case 'a':
 			textureIndex = (textureIndex+1) % 2;
 			display();
