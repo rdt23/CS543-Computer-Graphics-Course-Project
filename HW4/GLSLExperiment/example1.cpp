@@ -91,11 +91,11 @@ linkList ll = (linkNode*)malloc(sizeof(linkNode));
 char fileName[5][10] = {"lsys1.txt","lsys2.txt","lsys3.txt","lsys4.txt","lsys5.txt"};
 char plyFileName[3][20] = {"cylinder.ply","sphere.ply","big_porsche.ply"};
 char textureFileName[2][15] = {"grass.bmp","stones.bmp"};
-static int countOfVertex[4];
-static int countOfFace[4]; 
+static int countOfVertex[3];
+static int countOfFace[3]; 
 
 //store points from ply files
-point4 points[200];
+point4 points[6000];
 //store mesh information from ply files
 face3  face[10500];
 
@@ -117,12 +117,12 @@ float xMax[4], xMin[4], yMax[4], yMin[4], zMax[4], zMin[4];
 bmpread_t bitmap;
 static  GLuint  texture = 0;
 vec2 textureCoordinates[6] = {
-		vec2( 0.0,30.0),
+		vec2( 0.0,50.0),
 		vec2( 0.0, 0.0),
-		vec2(30.0, 0.0),
-		vec2(30.0, 0.0),
-		vec2(30.0,30.0),
-		vec2( 0.0,30.0)
+		vec2(50.0, 0.0),
+		vec2(50.0, 0.0),
+		vec2(50.0,50.0),
+		vec2( 0.0,50.0)
 	};
 point4 pointsGround[6] = {
 	point4( -200.0, 0.0, -500.0, 1.0 ),
@@ -229,7 +229,6 @@ void plyFileLoad(int fileIndex)
 	for(int j = 0; j < countOfFace[fileIndex]; j++)
 	{	//read each vertex
 		fscanf(inStream,"%d %d %d %d ", &lineNum, &vertex1, &vertex2, &vertex3);
-		//printf("%d %d %d\n", vertex1,vertex2,vertex3);
 		face[j].vertex1 =  vertex1;
 		face[j].vertex2 =  vertex2;
 		face[j].vertex3 =  vertex3;
@@ -239,7 +238,6 @@ void plyFileLoad(int fileIndex)
 	// Load different ply files into different point buffers  
 	//   cylinder, sphere, car, cow[cow doesn't work here] 
 
-	
 	switch(fileIndex)
 	{
 		case 0:
@@ -270,9 +268,6 @@ void plyFileLoad(int fileIndex)
 				carPointsBuf[i] = points[face[i/3].vertex1];
 				carPointsBuf[i+1] = points[face[i/3].vertex2];
 				carPointsBuf[i+2] = points[face[i/3].vertex3];
-				carColorsBuf[i]   = color4(1.0, 1.0, 0.0, 1.0 );
-				carColorsBuf[i+1] = color4(1.0, 1.0, 0.0, 1.0 );
-				carColorsBuf[i+2] = color4(1.0, 1.0, 0.0, 1.0 );
 			}
 			break;
 		default:
@@ -362,20 +357,17 @@ void drawCylinder( void )
 	modelMat = modelMat * Angel::Translate(currentPoint.x , currentPoint.y , currentPoint.z) 
 						* Angel::RotateZ(currentAngle.z) * Angel::RotateY(currentAngle.y-90.0f) * Angel::RotateX(currentAngle.x);
 
-	//Angel::mat4 shadowsModelView = Translate(light[0], light[1], light[2]) * m * Translate(-light[0], -light[1], -light[2]) * modelMat;
-
 	// for draw shadows use
-	shadowPoint[0] =currentPoint;// shadowsModelView * currentPoint;
+	shadowPoint[0] =currentPoint;
 
 	// update currentPoint now
 	currentPoint = modelMat * point4(0,1.0f,0,1);
 	Angel::mat4 shadowsModelView = viewMat * Translate(0, 1, 0) * Translate(light[0], light[1], light[2]) * m * Translate(-light[0], -light[1], -light[2]);
 	modelMat = viewMat * modelMat;
-	//currentAngle.w = 1.0f;
 	currentPoint.w = 1.0f;
 	
 	// for draw shadows use
-	shadowPoint[1] = currentPoint;//shadowsModelView * currentPoint;
+	shadowPoint[1] = currentPoint;
 
 	// set up projection matricies
 	GLuint modelMatrix = glGetUniformLocationARB(program, "model_matrix");
@@ -420,34 +412,33 @@ void drawCylinder( void )
 }
 void drawCar( void )
 {
-	float xRand = RandomNumber(7,10);
-	float zRand = RandomNumber(0,2);
+	for(int i = 0; i < countOfFace[2]*3; i++)
+	{
+		carColorsBuf[i] = color4(1.0, 1.0, 0.0, 1.0 );
+	}
+
 	glPolygonMode( GL_FRONT_AND_BACK, GL_LINE );
 	Angel::mat4 modelMat = Angel::identity();
+	mat4 m; // shadow projection matrix initially identity
+	m[3][1] = -1.0/light[1]; 
+	m[3][3] = 0;
 	
-	modelMat = modelMat *Angel::Translate((xMax[2]+xMin[2]+xRand), -(yMax[2]+yMin[2])/2-3.20, 
-				-sqrt(pow(xMax[2]-xMin[2],2)+pow(yMax[2]-yMin[2],2)+pow(zMax[2]-zMin[2],2))+zRand) * 
-					Angel::RotateY(90.0f) * Angel::RotateZ(90.0f);
-	modelMat = modelMat *Angel::Scale(0.7,0.7,0.7);
-
-	float modelMatrixf[16];
-	modelMatrixf[0] = modelMat[0][0];modelMatrixf[4] = modelMat[0][1];
-	modelMatrixf[1] = modelMat[1][0];modelMatrixf[5] = modelMat[1][1];
-	modelMatrixf[2] = modelMat[2][0];modelMatrixf[6] = modelMat[2][1];
-	modelMatrixf[3] = modelMat[3][0];modelMatrixf[7] = modelMat[3][1];
-
-	modelMatrixf[8] = modelMat[0][2];modelMatrixf[12] = modelMat[0][3];
-	modelMatrixf[9] = modelMat[1][2];modelMatrixf[13] = modelMat[1][3];
-	modelMatrixf[10] = modelMat[2][2];modelMatrixf[14] = modelMat[2][3];
-	modelMatrixf[11] = modelMat[3][2];modelMatrixf[15] = modelMat[3][3];
+	modelMat = modelMat *Angel::Translate(-20, 10, -20) * Angel::RotateY(90.0f) * Angel::RotateZ(90.0f);
+	modelMat = modelMat *Angel::Scale(2.7,2.7,2.7);
+	Angel::mat4 shadowsModelView = viewMat * Translate(0, 1, 0) * Translate(light[0], light[1], light[2]) * m * Translate(-light[0], -light[1], -light[2]) * modelMat;
+	modelMat = viewMat * modelMat;
 	
 	// set up projection matricies
 	GLuint modelMatrix = glGetUniformLocationARB(program, "model_matrix");
-	glUniformMatrix4fv( modelMatrix, 1, GL_FALSE, modelMatrixf );
+	glUniformMatrix4fv( modelMatrix, 1, GL_TRUE, modelMat );
 
 	glBufferData( GL_ARRAY_BUFFER, sizeof(carPointsBuf) + sizeof(carColorsBuf), NULL, GL_STATIC_DRAW );
 	glBufferSubData( GL_ARRAY_BUFFER, 0, sizeof(carPointsBuf), carPointsBuf );
 	glBufferSubData( GL_ARRAY_BUFFER, sizeof(carPointsBuf), sizeof(carColorsBuf), carColorsBuf );
+
+	GLint enableTreeColor = glGetUniformLocation(program, "enableTreeColor");
+    glUniform1i( enableTreeColor, 1);
+
 	GLuint vColor = glGetAttribLocation( program, "vColor" ); 
 	glEnableVertexAttribArray( vColor );
 	glVertexAttribPointer( vColor, 4, GL_FLOAT, GL_FALSE, 0, BUFFER_OFFSET(sizeof(carColorsBuf)) );
@@ -455,6 +446,26 @@ void drawCar( void )
 	glEnable( GL_DEPTH_TEST );
     glDrawArrays( GL_TRIANGLES, 0, countOfFace[2]*3 );
 	glDisable( GL_DEPTH_TEST );
+
+	if(enableShadows == 1)
+	{
+		GLuint shadowModelMatrix = glGetUniformLocationARB(program, "model_matrix");
+		glUniformMatrix4fv( shadowModelMatrix, 1, GL_TRUE, shadowsModelView );
+
+		for(int i = 0; i < countOfFace[2]*3; i++)
+		{
+			carColorsBuf[i] = color4(0.0, 0.0, 0.0, 1.0); 
+		}
+
+		glBufferData( GL_ARRAY_BUFFER, sizeof(carPointsBuf) + sizeof(carColorsBuf), NULL, GL_STATIC_DRAW );
+		glBufferSubData( GL_ARRAY_BUFFER, 0, sizeof(carPointsBuf), carPointsBuf );
+		glBufferSubData( GL_ARRAY_BUFFER, sizeof(carPointsBuf), sizeof(carColorsBuf), carColorsBuf );
+
+		glEnable( GL_DEPTH_TEST );
+		glDrawArrays( GL_TRIANGLES, 0, countOfFace[2]*3 );
+		glDisable( GL_DEPTH_TEST );
+	}
+
 }
 void drawSmallCar( void )
 {
@@ -737,7 +748,6 @@ void flush( void )
 	glFlush();
 	glutSwapBuffers();
 }
-
 void display()
 {
 	Angel::mat4 perspectiveMat = Angel::Perspective((GLfloat)90.0, (GLfloat)width/(GLfloat)height, (GLfloat)0.1, (GLfloat) 9998.0);
@@ -751,7 +761,7 @@ void display()
 
 	setAndLoadTexture(textureIndex);
     drawGround();
-
+	drawCar();
 	drawTree(-1);
     flush();
 }
@@ -829,7 +839,7 @@ int main( int argc, char **argv )
 	/* load sphere and cylinder into array */
 	plyFileLoad(0);
 	plyFileLoad(1);
-	//plyFileLoad(2);
+	plyFileLoad(2);
 	/* normalize the points for sphere and cylinder, 
 	   so that they will be at the same scale */
 	normalize();
