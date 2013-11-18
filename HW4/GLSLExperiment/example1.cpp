@@ -107,8 +107,6 @@ point4 spherePointsBuf[1000];
 color4 sphereColorsBuf[1000];
 point4 cylinderPointsBuf[200];
 color4 cylinderColorsBuf[200];
-point4 groundPointsBuf[300];
-color4 groundColorsBuf[300];
 
 /* store current state for translation */
 point4 currentPoint;
@@ -119,20 +117,20 @@ float xMax[4], xMin[4], yMax[4], yMin[4], zMax[4], zMin[4];
 bmpread_t bitmap;
 static  GLuint  texture = 0;
 vec2 textureCoordinates[6] = {
-		vec2(0.0,0.0),
 		vec2(0.0,10.0),
-		vec2(10.0,10.0),
-		vec2(10.0,10.0),
+		vec2(0.0,0.0),
 		vec2(10.0,0.0),
-		vec2(0.0,0.0)
+		vec2(10.0,0.0),
+		vec2(10.0,10.0),
+		vec2(0.0,10.0)
 	};
 point4 pointsGround[6] = {
-	point4( -50.0, 0.0, -20.0, 1.0 ),
-	point4( -50.0, 0.0, 20.0, 1.0 ),
-	point4( 50.0, 0.0, 20.0, 1.0 ),
-	point4( 50.0, 0.0, 20.0, 1.0 ),
-	point4( 50.0, 0.0, -20.0, 1.0 ),
-	point4( -50.0, 0.0, -20.0, 1.0 )
+	point4( -100.0, 0.0, -200.0, 1.0 ),
+	point4( -100.0, 0.0,  200.0, 1.0 ),
+	point4(  100.0, 0.0,  200.0, 1.0 ),
+	point4(  100.0, 0.0,  200.0, 1.0 ),
+	point4(  100.0, 0.0, -200.0, 1.0 ),
+	point4( -100.0, 0.0, -200.0, 1.0 )
     };
 //load info from ply file into arrays
 void plyFileLoad(int fileIndex)
@@ -151,7 +149,7 @@ void plyFileLoad(int fileIndex)
 		printf("File does not exist!");
 		exit(0);
 	}
-
+	
 	while(!feof(inStream))
 	{
 		//Just go through file header
@@ -206,8 +204,10 @@ void plyFileLoad(int fileIndex)
 	}
 
 	fclose(inStream);
-	/* Load different ply files into different point buffers  
-	   cylinder, sphere, car, cow[cow doesn't work here] */
+	// Load different ply files into different point buffers  
+	//   cylinder, sphere, car, cow[cow doesn't work here] 
+
+	
 	switch(fileIndex)
 	{
 		case 0:
@@ -238,9 +238,9 @@ void plyFileLoad(int fileIndex)
 				carPointsBuf[i] = points[face[i/3].vertex1];
 				carPointsBuf[i+1] = points[face[i/3].vertex2];
 				carPointsBuf[i+2] = points[face[i/3].vertex3];
-				carColorsBuf[i] = color4(1, 1, 0, 1.0 );
-				carColorsBuf[i+1] = color4(1, 1, 0, 1.0 );
-				carColorsBuf[i+2] = color4(1, 1, 0, 1.0 );
+				carColorsBuf[i]   = color4(1.0, 1.0, 0.0, 1.0 );
+				carColorsBuf[i+1] = color4(1.0, 1.0, 0.0, 1.0 );
+				carColorsBuf[i+2] = color4(1.0, 1.0, 0.0, 1.0 );
 			}
 			break;
 		default:
@@ -310,6 +310,9 @@ void drawSphere( void )
 	GLuint modelMatrix = glGetUniformLocationARB(program, "model_matrix");
 	glUniformMatrix4fv( modelMatrix, 1, GL_FALSE, modelMatrixf );
 
+	GLint enableTreeColor = glGetUniformLocation(program, "enableTreeColor");
+    glUniform1i( enableTreeColor, 1);
+
 	glBufferData( GL_ARRAY_BUFFER, sizeof(spherePointsBuf) + sizeof(sphereColorsBuf), NULL, GL_STATIC_DRAW );
 	glBufferSubData( GL_ARRAY_BUFFER, 0, sizeof(spherePointsBuf), spherePointsBuf );
 	glBufferSubData( GL_ARRAY_BUFFER, sizeof(spherePointsBuf), sizeof(sphereColorsBuf), sphereColorsBuf );
@@ -352,6 +355,10 @@ void drawCylinder( void )
 	glBufferData( GL_ARRAY_BUFFER, sizeof(cylinderPointsBuf) + sizeof(cylinderColorsBuf), NULL, GL_STATIC_DRAW );
 	glBufferSubData( GL_ARRAY_BUFFER, 0, sizeof(cylinderPointsBuf), cylinderPointsBuf );
 	glBufferSubData( GL_ARRAY_BUFFER, sizeof(cylinderPointsBuf), sizeof(cylinderColorsBuf), cylinderColorsBuf );
+
+	GLint enableTreeColor = glGetUniformLocation(program, "enableTreeColor");
+    glUniform1i( enableTreeColor, 1);
+
 	GLuint vColor = glGetAttribLocation( program, "vColor" ); 
 	glEnableVertexAttribArray( vColor );
 	glVertexAttribPointer( vColor, 4, GL_FLOAT, GL_FALSE, 0, BUFFER_OFFSET(sizeof(cylinderPointsBuf)) );
@@ -436,6 +443,10 @@ void drawSmallCar( void )
 	glBufferData( GL_ARRAY_BUFFER, sizeof(carPointsBuf) + sizeof(carColorsBuf), NULL, GL_STATIC_DRAW );
 	glBufferSubData( GL_ARRAY_BUFFER, 0, sizeof(carPointsBuf), carPointsBuf );
 	glBufferSubData( GL_ARRAY_BUFFER, sizeof(carPointsBuf), sizeof(carColorsBuf), carColorsBuf );
+
+	GLint enableTreeColor = glGetUniformLocation(program, "enableTreeColor");
+    glUniform1i( enableTreeColor, 1);
+
 	GLuint vColor = glGetAttribLocation( program, "vColor" ); 
 	glEnableVertexAttribArray( vColor );
 	glVertexAttribPointer( vColor, 4, GL_FLOAT, GL_FALSE, 0, BUFFER_OFFSET(sizeof(carColorsBuf)) );
@@ -542,11 +553,6 @@ void init( void )
     glUniform1i( glGetUniformLocation(program, "texture"), 0 );
     glBindTexture(GL_TEXTURE_2D, texture);
 	// sets the default color to clear screen
-	
-	//glPolygonMode( GL_FRONT_AND_BACK, GL_FILL );
-	//glEnable( GL_DEPTH_TEST );
-	//glDrawArrays( GL_TRIANGLES, 0, 6); 
-	//glDisable( GL_DEPTH_TEST );
 
     glClearColor( 1.0, 1.0, 1.0, 1.0 ); // white background
 }
@@ -556,36 +562,26 @@ float RandomNumber(float Min, float Max)
 }
 void drawGround( void )
 {
-
-	glPolygonMode( GL_FRONT_AND_BACK, GL_LINE );
-	Angel::mat4 modelMat = Angel::identity();
-
-	modelMat = modelMat * Angel::Translate(0 , 0 ,0) * Angel::RotateZ(0) * Angel::RotateY(0) * Angel::RotateX(0);
-
-	float modelMatrixf[16];
-	modelMatrixf[0] = modelMat[0][0];modelMatrixf[4] = modelMat[0][1];
-	modelMatrixf[1] = modelMat[1][0];modelMatrixf[5] = modelMat[1][1];
-	modelMatrixf[2] = modelMat[2][0];modelMatrixf[6] = modelMat[2][1];
-	modelMatrixf[3] = modelMat[3][0];modelMatrixf[7] = modelMat[3][1];
-
-	modelMatrixf[8] = modelMat[0][2];modelMatrixf[12] = modelMat[0][3];
-	modelMatrixf[9] = modelMat[1][2];modelMatrixf[13] = modelMat[1][3];
-	modelMatrixf[10] = modelMat[2][2];modelMatrixf[14] = modelMat[2][3];
-	modelMatrixf[11] = modelMat[3][2];modelMatrixf[15] = modelMat[3][3];
+	//glClear( GL_COLOR_BUFFER_BIT );
 	
-	// set up projection matricies
-	GLuint modelMatrix = glGetUniformLocationARB(program, "model_matrix");
-	glUniformMatrix4fv( modelMatrix, 1, GL_FALSE, modelMatrixf );
+	mat4 modelMat = Angel::identity();;
+	mat4 viewMat = LookAt( vec4(0,30,100,1), vec4(0,0,0,1), vec4(0,1,0,0) );
+	modelMat = modelMat * Angel::Translate(0.0 , -10.0 ,0.0) * Angel::RotateZ(0) * Angel::RotateY(0) * Angel::RotateX(0);
+	mat4 m = viewMat * modelMat;
+    GLuint modelMatrix = glGetUniformLocationARB(program, "model_matrix");
+    glUniformMatrix4fv( modelMatrix, 1, GL_TRUE, m );
+	
+	GLint enableTreeColor = glGetUniformLocation(program, "enableTreeColor");
+    glUniform1i( enableTreeColor, 0);
 
-	glBufferData( GL_ARRAY_BUFFER, sizeof(groundPointsBuf) + sizeof(groundColorsBuf), NULL, GL_STATIC_DRAW );
-	glBufferSubData( GL_ARRAY_BUFFER, 0, sizeof(groundPointsBuf), groundPointsBuf );
-	glBufferSubData( GL_ARRAY_BUFFER, sizeof(groundPointsBuf), sizeof(groundColorsBuf), groundColorsBuf );
-	GLuint vColor = glGetAttribLocation( program, "vColor" ); 
-	glEnableVertexAttribArray( vColor );
-	glVertexAttribPointer( vColor, 4, GL_FLOAT, GL_FALSE, 0, BUFFER_OFFSET(sizeof(groundPointsBuf)) );
-
+	glBufferData( GL_ARRAY_BUFFER, sizeof(pointsGround) + sizeof(textureCoordinates), NULL, GL_STATIC_DRAW );
+	glBufferSubData( GL_ARRAY_BUFFER, 0, sizeof(pointsGround), pointsGround );
+	glBufferSubData( GL_ARRAY_BUFFER, sizeof(pointsGround), sizeof(textureCoordinates), textureCoordinates );
+	
+	glPolygonMode( GL_FRONT_AND_BACK, GL_FILL );
+	glClear( GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT );   
 	glEnable( GL_DEPTH_TEST );
-    glDrawArrays( GL_LINES, 0, 264); 
+    glDrawArrays( GL_TRIANGLES, 0, 6 );
 	glDisable( GL_DEPTH_TEST );
 }
 void drawTree( int fileIndex)
@@ -694,104 +690,24 @@ void drawTree( int fileIndex)
 }
 void drawForest( void )
 {
-	drawGround();
-	drawCar();
-	drawSmallCar();
-	for(int i = 0; i < 3; i++)
-	{
-		drawTree(i%5);
-	}
+	drawTree(0);
+	drawTree(1);
+	drawTree(3);
 }
 void flush( void )
 {
 	glFlush();
 	glutSwapBuffers();
 }
-//----------------------------------------------------------------------------
-// this is where the drawing should happen
 
-
-//void display( void )
-//{
-//    glClear( GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT );     // clear the window
-//	//glPolygonMode( GL_FRONT_AND_BACK, GL_FILL );
-//	/* Begin of setup view matrix*/
-//	mat4 viewMat = LookAt( vec4(0,30,100,1), vec4(0,0,0,1), vec4(0,1,0,0) );
-//	Angel::mat4 perspectiveMat = Angel::Perspective((GLfloat)60.0, (GLfloat)width/(GLfloat)height, (GLfloat)0.1, (GLfloat) 9998.0);
-//	mat4 modelMat;
-//	/*mat4 m = viewMat * modelMat;
-//
-//	GLuint modelMatrix = glGetUniformLocationARB(program, "model_matrix");
-//	glUniformMatrix4fv( modelMatrix, 1, GL_FALSE, m);*/
-//	//modelMat = modelMat * Angel::Translate(0 , 0 ,0) * Angel::RotateZ(0) * Angel::RotateY(0) * Angel::RotateX(0);
-//	//modelMat = modelMat * viewMat;
-//	//float modelMatrixf[16];
-//	//modelMatrixf[0] = modelMat[0][0];modelMatrixf[4] = modelMat[0][1];
-//	//modelMatrixf[1] = modelMat[1][0];modelMatrixf[5] = modelMat[1][1];
-//	//modelMatrixf[2] = modelMat[2][0];modelMatrixf[6] = modelMat[2][1];
-//	//modelMatrixf[3] = modelMat[3][0];modelMatrixf[7] = modelMat[3][1];
-//
-//	//modelMatrixf[8] = modelMat[0][2];modelMatrixf[12] = modelMat[0][3];
-//	//modelMatrixf[9] = modelMat[1][2];modelMatrixf[13] = modelMat[1][3];
-//	//modelMatrixf[10] = modelMat[2][2];modelMatrixf[14] = modelMat[2][3];
-//	//modelMatrixf[11] = modelMat[3][2];modelMatrixf[15] = modelMat[3][3];
-//	
-//
-//	
-//	mat4 m = viewMat * modelMat;
-//    GLuint modelMatrix = glGetUniformLocationARB(program, "model_matrix");
-//    glUniformMatrix4fv( modelMatrix, 1, GL_TRUE, m );
-//	
-//	// set up projection matricies
-//	//GLuint modelMatrix = glGetUniformLocationARB(program, "model_matrix");
-//	//glUniformMatrix4fv( modelMatrix, 1, GL_FALSE, modelMatrixf );
-//
-//	/*float viewMatrixf[16];
-//	viewMatrixf[0] = perspectiveMat[0][0];viewMatrixf[4] = perspectiveMat[0][1];
-//	viewMatrixf[1] = perspectiveMat[1][0];viewMatrixf[5] = perspectiveMat[1][1];
-//	viewMatrixf[2] = perspectiveMat[2][0];viewMatrixf[6] = perspectiveMat[2][1];
-//	viewMatrixf[3] = perspectiveMat[3][0];viewMatrixf[7] = perspectiveMat[3][1];
-//
-//	viewMatrixf[8] = perspectiveMat[0][2];viewMatrixf[12] = perspectiveMat[0][3];
-//	viewMatrixf[9] = perspectiveMat[1][2];viewMatrixf[13] = perspectiveMat[1][3];
-//	viewMatrixf[10] = perspectiveMat[2][2];viewMatrixf[14] = perspectiveMat[2][3];
-//	viewMatrixf[11] = perspectiveMat[3][2];viewMatrixf[15] = perspectiveMat[3][3];*/
-//	
-//	
-//
-//	GLuint projectionMatrix = glGetUniformLocationARB(program, "projection_matrix");
-//	glUniformMatrix4fv( projectionMatrix, 1, GL_TRUE, perspectiveMat);
-//
-//	init();
-//	flush();
-//	/* End of setup view matrix*/
-//
-//	//drawTree(fileIndex);
-//	//flush();
-//}
 void display()
 {
-	mat4 modelMat;
-	mat4 viewMat = LookAt( vec4(0,30,100,1), vec4(0,0,0,1), vec4(0,1,0,0) );
-	modelMat = modelMat * Angel::Translate(0 , -10.0 ,0) * Angel::RotateZ(0) * Angel::RotateY(0) * Angel::RotateX(0);
-	mat4 m = viewMat * modelMat;
-
-    GLuint modelMatrix = glGetUniformLocationARB(program, "model_matrix");
-    glUniformMatrix4fv( modelMatrix, 1, GL_TRUE, m );
-	
-
-	Angel::mat4 perspectiveMat = Angel::Perspective((GLfloat)60.0, (GLfloat)width/(GLfloat)height, (GLfloat)0.1, (GLfloat) 1000.0);
+	Angel::mat4 perspectiveMat = Angel::Perspective((GLfloat)90.0, (GLfloat)width/(GLfloat)height, (GLfloat)0.1, (GLfloat) 9998.0);
     Projection = glGetUniformLocationARB( program, "Projection" );
 	glUniformMatrix4fv( Projection, 1, GL_TRUE, perspectiveMat);
-	glBufferData( GL_ARRAY_BUFFER, sizeof(pointsGround) + sizeof(textureCoordinates), NULL, GL_STATIC_DRAW );
-	glBufferSubData( GL_ARRAY_BUFFER, 0, sizeof(pointsGround), pointsGround );
-	glBufferSubData( GL_ARRAY_BUFFER, sizeof(pointsGround), sizeof(textureCoordinates), textureCoordinates );
-	
 
-
-    glClear( GL_COLOR_BUFFER_BIT );
-    glDrawArrays( GL_TRIANGLES, 0, 6 );
-	//drawTree(1);
+    drawGround();
+	drawTree(-1);
     flush();
 }
  //normalize cylinder and sphere, so that they have the same diameter, and the length of cylinder will be 1 (also change the start point of cylinder to the buttom).
@@ -830,52 +746,22 @@ void normalize( void )
 // keyboard handler
 void keyboard( unsigned char key, int x, int y )
 {
-	int flag = 1;
 	glClear( GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT );     // clear the window
 
     switch ( key ) 
 	{
-		case 'a':
-			fileIndex = 0;
-			break;
-
-		case 'b':
-			fileIndex = 1;
-			break;
-
-		case 'c':
-			fileIndex = 2;
-			break;
-
-		case 'd':
-			fileIndex = 3;
-			break;
-
-		case 'e':
-			fileIndex = 4;
-			break;
-
-		case 'r':
-			fileIndex = rand() % 5;
-			break;
 		case 'f':
-			fileIndex = -1;
+			display();
 			break;
 
 		case 033:
 			exit( EXIT_SUCCESS );
 			break;
 		default:
-			flag = 0;
+			//flag = 0;
 			break;
     }
-	if(flag == 1)
-	{
-		/* Begin of DRAW */
-		drawTree(fileIndex);
-		flush();
-		/* End  of  DRAW */
-	}
+
 }
 //----------------------------------------------------------------------------
 // entry point
@@ -887,7 +773,7 @@ int main( int argc, char **argv )
 	/* load sphere and cylinder into array */
 	plyFileLoad(0);
 	plyFileLoad(1);
-	plyFileLoad(2);
+	//plyFileLoad(2);
 	//loadGround();
 	//drawGround();
 	/* normalize the points for sphere and cylinder, 
