@@ -25,11 +25,11 @@ void drawCylinder( void );
 void flush( void );
 void drawForest( void );
 void drawGround( void );
-void loadGround( void );
 void drawCar( void );
 void drawCow( void );
 void drawSmallCar( void );
-void reshape( int width, int height );
+void setAndLoadTexture( int );
+
 typedef Angel::vec4  color4;
 typedef Angel::vec4  point4;
 typedef Angel::vec4  angle4;
@@ -92,6 +92,7 @@ linkList ll = (linkNode*)malloc(sizeof(linkNode));
 
 char fileName[5][10] = {"lsys1.txt","lsys2.txt","lsys3.txt","lsys4.txt","lsys5.txt"};
 char plyFileName[3][20] = {"cylinder.ply","sphere.ply","big_porsche.ply"};
+char textureFileName[2][15] = {"grass.bmp","stones.bmp"};
 static int countOfVertex[4];
 static int countOfFace[4]; 
 
@@ -113,6 +114,7 @@ point4 currentPoint;
 angle4 currentAngle;
 
 static int fileIndex = 0;
+static int textureIndex = 0;
 float xMax[4], xMin[4], yMax[4], yMin[4], zMax[4], zMin[4];
 bmpread_t bitmap;
 static  GLuint  texture = 0;
@@ -137,6 +139,31 @@ mat4 viewMat = LookAt(vec4(0,0,70,1), vec4(0,0,0,1), vec4(0,1,0,0));
 
 int fogParameter = 0;// [used in shader] - 0:diable; 1:enabled with liner increment; 2:enabled with exponential increment
 
+void setAndLoadTexture( int texttureIndex )
+{
+	if(!bmpread(textureFileName[texttureIndex], 0, &bitmap))
+	{
+		fprintf(stderr, "%s:error loading bitmap file\n", "grass.bmp");
+		exit(1);
+	}
+
+    glActiveTexture( GL_TEXTURE0 );
+    glGenTextures( 1, &texture );
+    glBindTexture( GL_TEXTURE_2D, texture );
+
+	glTexParameterf( GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT );
+    glTexParameterf( GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT );
+    glTexParameterf( GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR );
+    glTexParameterf( GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR );
+
+    glTexImage2D( GL_TEXTURE_2D, 0, GL_RGB, bitmap.width, bitmap.height, 0, GL_RGB, GL_UNSIGNED_BYTE, bitmap.rgb_data );
+	bmpread_free(&bitmap);
+
+	 // Set our texture samples to the active texture unit
+    glUniform1i( glGetUniformLocation(program, "texture"), 0 );
+    glBindTexture(GL_TEXTURE_2D, texture);
+
+}
 //load info from ply file into arrays
 void plyFileLoad(int fileIndex)
 {
@@ -487,27 +514,6 @@ int get_count( void )
 }
 void init( void )
 {	
-	printf("Loading grass.bmp\n");
-
-	if(!bmpread("grass.bmp", 0, &bitmap))
-	{
-		fprintf(stderr, "%s:error loading bitmap file\n", "grass.bmp");
-		exit(1);
-	}
-
-    glActiveTexture( GL_TEXTURE0 );
-    glGenTextures( 1, &texture );
-    glBindTexture( GL_TEXTURE_2D, texture );
-
-	glTexParameterf( GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT );
-    glTexParameterf( GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT );
-    glTexParameterf( GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR );
-    glTexParameterf( GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR );
-
-    glTexImage2D( GL_TEXTURE_2D, 0, GL_RGB, bitmap.width, bitmap.height, 0, GL_RGB, GL_UNSIGNED_BYTE, bitmap.rgb_data );
-	bmpread_free(&bitmap);
-
-
     // Create a vertex array object
     GLuint vao;
     glGenVertexArrays( 1, &vao );
@@ -533,12 +539,7 @@ void init( void )
     glEnableVertexAttribArray( vTexCoord );
     glVertexAttribPointer( vTexCoord, 2, GL_FLOAT, GL_FALSE, 0, BUFFER_OFFSET(sizeof(pointsGround)) );
 
-
-    // Set our texture samples to the active texture unit
-    glUniform1i( glGetUniformLocation(program, "texture"), 0 );
-    glBindTexture(GL_TEXTURE_2D, texture);
 	// sets the default color to clear screen
-
     glClearColor( 1.0, 1.0, 1.0, 1.0 ); // white background
 }
 float RandomNumber(float Min, float Max)
@@ -706,7 +707,9 @@ void display()
 	GLint enableFogWithSpecialIncrement = glGetUniformLocation(program, "enableFogWithSpecialIncrement");
     glUniform1i( enableFogWithSpecialIncrement, fogParameter);
 
-	printf("fogParameter = %d\n", fogParameter);
+	//printf("fogParameter = %d\n", fogParameter);
+
+	setAndLoadTexture(textureIndex);
 
     drawGround();
 	drawTree(-1);
@@ -752,6 +755,11 @@ void keyboard( unsigned char key, int x, int y )
 
     switch ( key ) 
 	{
+		case 'a':
+			textureIndex = (textureIndex+1) % 2;
+			display();
+			break;
+
 		case 'f':
 			fogParameter = (fogParameter+1) % 3;
 			display();
