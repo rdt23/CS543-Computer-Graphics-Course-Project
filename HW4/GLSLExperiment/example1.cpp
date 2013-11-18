@@ -574,20 +574,10 @@ void drawTree( int fileIndex)
 	}
 	else
 	{
-		color4 randColor = color4(RandomNumber(0,2.0), RandomNumber(0,2.0) , RandomNumber(0,2.0), 1.0f);
-		for(int i = 0, j = 0; i < countOfFace[0]*3; i++)
-		{
-			cylinderColorsBuf[i] = randColor;//color4( 0.0, 1.0, 0.0, 1.0 );
-		}
-		for(int i = 0, j = 0; i < countOfFace[1]*3; i++)
-		{
-			sphereColorsBuf[i] = randColor;//color4( 0.0, 1.0, 0.0, 1.0 );
-		}
-	
 		stack<point4> currentPointHistory;
 		stack<angle4> currentAngleHistory;
 		do_iteration(fileIndex);
-		//get_count();
+
 		linkList cursor = ll->next;
 		currentAngle.x = 0;
 		currentAngle.y = 0;
@@ -598,12 +588,29 @@ void drawTree( int fileIndex)
 		{
 			case 0:
 				currentPoint.y = -25.0;
-				currentPoint.x = RandomNumber(-100, 100);
-				currentPoint.z = RandomNumber(-300, -125);
+				currentPoint.x = -77;
+				currentPoint.z = -227;
+				for(int i = 0; i < countOfFace[0]*3; i++)
+				{
+					cylinderColorsBuf[i] = color4( 0.0, 1.0, 0.0, 1.0 );
+				}
+				for(int i = 0; i < countOfFace[1]*3; i++)
+				{
+					sphereColorsBuf[i] = color4( 0.0, 1.0, 0.0, 1.0 );
+				}
 				break;
 			case 1:
-				currentPoint.x = RandomNumber(-30, 30);
-				currentPoint.z = RandomNumber(-50, -10);
+				currentPoint.x = 33;
+				currentPoint.z = -30;
+				for(int i = 0; i < countOfFace[0]*3; i++)
+				{
+					cylinderColorsBuf[i] = color4( 1.0, 0.0, 0.0, 1.0 );
+				}
+				for(int i = 0; i < countOfFace[1]*3; i++)
+				{
+					sphereColorsBuf[i] = color4( 1.0, 0.0, 0.0, 1.0 );
+				}
+				
 				break;
 			case 2:
 				currentPoint.x = RandomNumber(-50, 50);
@@ -614,8 +621,16 @@ void drawTree( int fileIndex)
 				currentPoint.z = RandomNumber(-1, -0.5);
 				break;
 			case 4:
-				currentPoint.x = RandomNumber(-27, 27);
-				currentPoint.z = RandomNumber(-1, 15);
+				for(int i = 0; i < countOfFace[0]*3; i++)
+				{
+					cylinderColorsBuf[i] = color4( 0.0, 0.0, 1.0, 1.0 );
+				}
+				for(int i = 0; i < countOfFace[1]*3; i++)
+				{
+					sphereColorsBuf[i] = color4( 0.0, 0.0, 1.0, 1.0 );
+				}
+				currentPoint.x = -17;
+				currentPoint.z = 20;
 				break;
 
 		}
