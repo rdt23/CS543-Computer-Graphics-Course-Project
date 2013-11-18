@@ -15,7 +15,7 @@ void display( void );
 void keyboard( unsigned char, int, int );
 void plyFileLoad(int);
 void readFile(int);
-void do_iteration(int);
+void doIteration(int);
 void normalize( void );
 void drawTree( int );
 float RandomNumber(float , float );
@@ -25,7 +25,6 @@ void flush( void );
 void drawForest( void );
 void drawGround( void );
 void drawCar( void );
-void drawSmallCar( void );
 void setAndLoadTexture( int );
 
 typedef Angel::vec4  color4;
@@ -138,7 +137,88 @@ mat4 viewMat = LookAt(vec4(0,37,70,1), vec4(0,0,0,1), vec4(0,1,0,0));
 int fogParameter = 0;// [used in shader] - 0:diable; 1:enabled with liner increment; 2:enabled with exponential increment
 int enableShadows = 0;
 float light[3] = {70,300,-200}; // location of light
+/*********************************************/
+const int NumVertices = 36; //(6 faces)(2 triangles/face)(3 vertices/triangle)
 
+point4 cubePoints[NumVertices];
+color4 cubeColors[NumVertices];
+
+// Vertices of a unit cube centered at origin, sides aligned with axes
+point4 vertices[8] = {
+    point4( -0.5, -0.5,  0.5, 1.0 ),
+    point4( -0.5,  0.5,  0.5, 1.0 ),
+    point4(  0.5,  0.5,  0.5, 1.0 ),
+    point4(  0.5, -0.5,  0.5, 1.0 ),
+    point4( -0.5, -0.5, -0.5, 1.0 ),
+    point4( -0.5,  0.5, -0.5, 1.0 ),
+    point4(  0.5,  0.5, -0.5, 1.0 ),
+    point4(  0.5, -0.5, -0.5, 1.0 )
+};
+// RGBA olors
+color4 vertex_colors[8] = {
+    color4( 0.0, 0.0, 0.0, 1.0 ),  // black
+    color4( 1.0, 0.0, 0.0, 1.0 ),  // red
+    color4( 1.0, 1.0, 0.0, 1.0 ),  // yellow
+    color4( 0.0, 1.0, 0.0, 1.0 ),  // green
+    color4( 0.0, 0.0, 1.0, 1.0 ),  // blue
+    color4( 1.0, 0.0, 1.0, 1.0 ),  // magenta
+    color4( 1.0, 1.0, 1.0, 1.0 ),  // white
+    color4( 0.0, 1.0, 1.0, 1.0 )   // cyan
+};
+// quad generates two triangles for each face and assigns colors
+//    to the vertices
+int Index = 0;
+point4 normals[6];
+vec4 normal;
+
+void quad( int a, int b, int c, int d )
+{
+    cubeColors[Index] = vertex_colors[a]; cubePoints[Index] = vertices[a]; Index++;
+    cubeColors[Index] = vertex_colors[b]; cubePoints[Index] = vertices[b]; Index++;
+    cubeColors[Index] = vertex_colors[c]; cubePoints[Index] = vertices[c]; Index++;
+    cubeColors[Index] = vertex_colors[a]; cubePoints[Index] = vertices[a]; Index++;
+    cubeColors[Index] = vertex_colors[c]; cubePoints[Index] = vertices[c]; Index++;
+    cubeColors[Index] = vertex_colors[d]; cubePoints[Index] = vertices[d]; Index++;
+
+	static int i =0;
+	normal = normalize(cross(vertices[b] - vertices[a],	vertices[c] - vertices[b]));
+
+	normals[i] = normal;
+	points[i] = vertices[a];
+	i++;
+
+	normals[i] = normal;
+	points[i] = vertices[a];
+	i++;
+
+	normals[i] = normal;
+	points[i] = vertices[a];
+	i++;
+
+	normals[i] = normal;
+	points[i] = vertices[a];
+	i++;
+
+	normals[i] = normal;
+	points[i] = vertices[a];
+	i++;
+
+	normals[i] = normal;
+	points[i] = vertices[a];
+	i++;
+
+}
+// generate 12 triangles: 36 vertices and 36 colors
+void colorcube()
+{
+    quad( 1, 0, 3, 2 );
+    quad( 2, 3, 7, 6 );
+    quad( 3, 0, 4, 7 );
+    quad( 6, 5, 1, 2 );
+    quad( 4, 5, 6, 7 );
+    quad( 5, 4, 0, 1 );
+}
+/*********************************************/
 void setAndLoadTexture( int textureIndex )
 {
 	if(!bmpread(textureFileName[textureIndex], 0, &bitmap))
@@ -320,7 +400,6 @@ void drawSphere( void )
 {
 	glPolygonMode( GL_FRONT_AND_BACK, GL_LINE );
 
-	//mat4 viewMat = LookAt(vec4(0,0,100,1), vec4(0,0,0,1), vec4(0,1,0,0));
 	Angel::mat4 modelMat = Angel::identity();
 	modelMat = modelMat * Angel::Translate(currentPoint.x , currentPoint.y , currentPoint.z) * Angel::RotateZ(0.0f) * Angel::RotateY(0.0f) * Angel::RotateX(0.0f);
 	modelMat = viewMat * modelMat;
@@ -467,56 +546,8 @@ void drawCar( void )
 	}
 
 }
-void drawSmallCar( void )
-{
-	// randomize the location for small car
-	float xRand = RandomNumber(-7,-3);
-	float zRand = RandomNumber(-3,2);
-	color4 randColor = color4(RandomNumber(0,2.0), RandomNumber(0,2.0) , RandomNumber(0,2.0), 1.0f);
-	for(int i = 0, j = 0; i < countOfFace[2]*3; i++)
-	{
-		carColorsBuf[i] = randColor;//color4( 0.0, 1.0, 0.0, 1.0 );
-	}
-	glPolygonMode( GL_FRONT_AND_BACK, GL_LINE );
-	Angel::mat4 modelMat = Angel::identity();
-	
-	modelMat = modelMat *Angel::Translate((xMax[2]+xMin[2]+xRand), -(yMax[2]+yMin[2])/2-3.20, 
-				-sqrt(pow(xMax[2]-xMin[2],2)+pow(yMax[2]-yMin[2],2)+pow(zMax[2]-zMin[2],2))+zRand) * 
-					Angel::RotateY(0.0f) * Angel::RotateZ(90.0f);
-	modelMat = modelMat *Angel::Scale(0.5,0.5,0.5);
-
-	float modelMatrixf[16];
-	modelMatrixf[0] = modelMat[0][0];modelMatrixf[4] = modelMat[0][1];
-	modelMatrixf[1] = modelMat[1][0];modelMatrixf[5] = modelMat[1][1];
-	modelMatrixf[2] = modelMat[2][0];modelMatrixf[6] = modelMat[2][1];
-	modelMatrixf[3] = modelMat[3][0];modelMatrixf[7] = modelMat[3][1];
-
-	modelMatrixf[8] = modelMat[0][2];modelMatrixf[12] = modelMat[0][3];
-	modelMatrixf[9] = modelMat[1][2];modelMatrixf[13] = modelMat[1][3];
-	modelMatrixf[10] = modelMat[2][2];modelMatrixf[14] = modelMat[2][3];
-	modelMatrixf[11] = modelMat[3][2];modelMatrixf[15] = modelMat[3][3];
-	
-	// set up projection matricies
-	GLuint modelMatrix = glGetUniformLocationARB(program, "model_matrix");
-	glUniformMatrix4fv( modelMatrix, 1, GL_FALSE, modelMatrixf );
-
-	glBufferData( GL_ARRAY_BUFFER, sizeof(carPointsBuf) + sizeof(carColorsBuf), NULL, GL_STATIC_DRAW );
-	glBufferSubData( GL_ARRAY_BUFFER, 0, sizeof(carPointsBuf), carPointsBuf );
-	glBufferSubData( GL_ARRAY_BUFFER, sizeof(carPointsBuf), sizeof(carColorsBuf), carColorsBuf );
-
-	GLint enableTreeColor = glGetUniformLocation(program, "enableTreeColor");
-    glUniform1i( enableTreeColor, 1);
-
-	GLuint vColor = glGetAttribLocation( program, "vColor" ); 
-	glEnableVertexAttribArray( vColor );
-	glVertexAttribPointer( vColor, 4, GL_FLOAT, GL_FALSE, 0, BUFFER_OFFSET(sizeof(carColorsBuf)) );
-
-	glEnable( GL_DEPTH_TEST );
-    glDrawArrays( GL_TRIANGLES, 0, countOfFace[2]*3 );
-	glDisable( GL_DEPTH_TEST );
-}
 //extend the formula from L-systems file, and store it into a link list
-void do_iteration(int index)
+void doIteration(int index)
 {
 	readFile(index);
 	linkList cursor;
@@ -550,6 +581,7 @@ void do_iteration(int index)
 
 void init( void )
 {	
+	colorcube();
     // Create a vertex array object
     GLuint vao;
     glGenVertexArrays( 1, &vao );
@@ -613,7 +645,7 @@ void drawTree( int fileIndex)
 	{
 		stack<point4> currentPointHistory;
 		stack<angle4> currentAngleHistory;
-		do_iteration(fileIndex);
+		doIteration(fileIndex);
 
 		linkList cursor = ll->next;
 		currentAngle.x = 0;
@@ -798,6 +830,38 @@ void normalize( void )
 	zMin[1] = -xMax[1];
 }
 
+void cubeMap( void )
+{
+	GLuint texMapLocation;
+	GLuint tex[1];
+
+	// colors for sides of cube
+	GLubyte red[3] = {255, 0, 0};
+	GLubyte green[3] = {0, 255, 0};
+	GLubyte blue[3] = {0, 0, 255};
+	GLubyte cyan[3] = {0, 255, 255};
+	GLubyte magenta[3] = {255, 0, 255};
+	GLubyte yellow[3] = {255, 255, 0};
+	glEnable(GL_TEXTURE_CUBE_MAP);
+	// Create texture object
+	glGenTextures(1, tex);
+	glActiveTexture(GL_TEXTURE1);
+	glBindTexture(GL_TEXTURE_CUBE_MAP, tex[0]);
+
+	glTexImage2D(GL_TEXTURE_CUBE_MAP_POSITIVE_X ,0,3,1,1,0,GL_RGB,GL_UNSIGNED_BYTE, red);
+	glTexImage2D(GL_TEXTURE_CUBE_MAP_NEGATIVE_X ,0,3,1,1,0,GL_RGB,GL_UNSIGNED_BYTE, green);
+	glTexImage2D(GL_TEXTURE_CUBE_MAP_POSITIVE_Y ,0,3,1,1,0,GL_RGB,GL_UNSIGNED_BYTE, blue);
+	glTexImage2D(GL_TEXTURE_CUBE_MAP_NEGATIVE_Y ,0,3,1,1,0,GL_RGB,GL_UNSIGNED_BYTE, cyan);
+	glTexImage2D(GL_TEXTURE_CUBE_MAP_POSITIVE_Z ,0,3,1,1,0,GL_RGB,GL_UNSIGNED_BYTE, magenta);
+	glTexImage2D(GL_TEXTURE_CUBE_MAP_NEGATIVE_Z ,0,3,1,1,0,GL_RGB,GL_UNSIGNED_BYTE, yellow);
+	glTexParameteri(GL_TEXTURE_CUBE_MAP,GL_TEXTURE_MAG_FILTER,GL_NEAREST);
+
+
+	texMapLocation = glGetUniformLocation(program, "texMap"); 
+	glUniform1i(texMapLocation, tex[0]);
+
+
+}
 // keyboard handler
 void keyboard( unsigned char key, int x, int y )
 {
