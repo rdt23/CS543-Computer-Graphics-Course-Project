@@ -1,9 +1,11 @@
 #version 150
 
 in  vec4 vPosition;
-in  vec4 vTexCoord;
+in  vec2 vTexCoord;
+in  vec4 vColor;
+
 out vec2 texCoord;
-//out vec4 interpolatedColor;
+out vec4 interpolatedColor;
 
 uniform mat4 Projection;
 uniform mat4 model_matrix;
@@ -13,5 +15,5 @@ void main()
     // We only need the s and t values of the texture coordinate
     texCoord = vTexCoord.st;
     gl_Position = Projection * model_matrix * vPosition;
-	//interpolatedColor = vColor;
+	interpolatedColor = vColor;
 }

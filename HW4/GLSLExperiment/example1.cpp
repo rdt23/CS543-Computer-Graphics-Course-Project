@@ -55,8 +55,8 @@ GLuint Projection;
 
 /* N x M array to be generated */
 
-#define N 512
-#define M 512
+#define N 1280
+#define M 800
 
 float height = HEIGHT;          /* size of window in complex plane */
 float width = WIDTH;
@@ -117,12 +117,12 @@ float xMax[4], xMin[4], yMax[4], yMin[4], zMax[4], zMin[4];
 bmpread_t bitmap;
 static  GLuint  texture = 0;
 vec2 textureCoordinates[6] = {
-		vec2(0.0,10.0),
-		vec2(0.0,0.0),
-		vec2(10.0,0.0),
-		vec2(10.0,0.0),
-		vec2(10.0,10.0),
-		vec2(0.0,10.0)
+		vec2( 0.0,30.0),
+		vec2( 0.0, 0.0),
+		vec2(30.0, 0.0),
+		vec2(30.0, 0.0),
+		vec2(30.0,30.0),
+		vec2( 0.0,30.0)
 	};
 point4 pointsGround[6] = {
 	point4( -100.0, 0.0, -200.0, 1.0 ),
@@ -132,6 +132,9 @@ point4 pointsGround[6] = {
 	point4(  100.0, 0.0, -200.0, 1.0 ),
 	point4( -100.0, 0.0, -200.0, 1.0 )
     };
+
+mat4 viewMat = LookAt(vec4(0,0,70,1), vec4(0,0,0,1), vec4(0,1,0,0));
+
 //load info from ply file into arrays
 void plyFileLoad(int fileIndex)
 {
@@ -292,23 +295,14 @@ void readFile(int index)
 void drawSphere( void )
 {
 	glPolygonMode( GL_FRONT_AND_BACK, GL_LINE );
+
+	//mat4 viewMat = LookAt(vec4(0,0,100,1), vec4(0,0,0,1), vec4(0,1,0,0));
 	Angel::mat4 modelMat = Angel::identity();
-
 	modelMat = modelMat * Angel::Translate(currentPoint.x , currentPoint.y , currentPoint.z) * Angel::RotateZ(0.0f) * Angel::RotateY(0.0f) * Angel::RotateX(0.0f);
-	float modelMatrixf[16];
-	modelMatrixf[0] = modelMat[0][0];modelMatrixf[4] = modelMat[0][1];
-	modelMatrixf[1] = modelMat[1][0];modelMatrixf[5] = modelMat[1][1];
-	modelMatrixf[2] = modelMat[2][0];modelMatrixf[6] = modelMat[2][1];
-	modelMatrixf[3] = modelMat[3][0];modelMatrixf[7] = modelMat[3][1];
-
-	modelMatrixf[8] = modelMat[0][2];modelMatrixf[12] = modelMat[0][3];
-	modelMatrixf[9] = modelMat[1][2];modelMatrixf[13] = modelMat[1][3];
-	modelMatrixf[10] = modelMat[2][2];modelMatrixf[14] = modelMat[2][3];
-	modelMatrixf[11] = modelMat[3][2];modelMatrixf[15] = modelMat[3][3];
-	
+	modelMat = viewMat * modelMat;
 	// set up projection matricies
 	GLuint modelMatrix = glGetUniformLocationARB(program, "model_matrix");
-	glUniformMatrix4fv( modelMatrix, 1, GL_FALSE, modelMatrixf );
+	glUniformMatrix4fv( modelMatrix, 1, GL_TRUE, modelMat);
 
 	GLint enableTreeColor = glGetUniformLocation(program, "enableTreeColor");
     glUniform1i( enableTreeColor, 1);
@@ -328,29 +322,18 @@ void drawCylinder( void )
 {
 	glPolygonMode( GL_FRONT_AND_BACK, GL_LINE );
 	Angel::mat4 modelMat = Angel::identity();
-
+	//mat4 viewMat = LookAt(vec4(0,0,100,1), vec4(0,0,0,1), vec4(0,1,0,0));
 	modelMat = modelMat * Angel::Translate(currentPoint.x , currentPoint.y , currentPoint.z) * Angel::RotateZ(currentAngle.z) * Angel::RotateY(currentAngle.y-90.0f) * Angel::RotateX(currentAngle.x);
-
+	
 	// update currentPoint now
-	//point4 increament = Angel::identity() * Angel::RotateZ(currentAngle.z) * Angel::RotateY(currentAngle.y+90.0f) * Angel::RotateX(currentAngle.x)*point4(0,1.0f,0,1);
-	currentPoint = modelMat*point4(0,1.0f,0,1);//increament;//Angel::identity() * Angel::RotateZ(currentAngle.z) * Angel::RotateY(currentAngle.y) * Angel::RotateX(currentAngle.x)*point4(0,1.0f,0,1);
+	currentPoint = modelMat*point4(0,1.0f,0,1);
+	modelMat = viewMat * modelMat;
 	//currentAngle.w = 1.0f;
 	currentPoint.w = 1.0f;
-
-	float modelMatrixf[16];
-	modelMatrixf[0] = modelMat[0][0];modelMatrixf[4] = modelMat[0][1];
-	modelMatrixf[1] = modelMat[1][0];modelMatrixf[5] = modelMat[1][1];
-	modelMatrixf[2] = modelMat[2][0];modelMatrixf[6] = modelMat[2][1];
-	modelMatrixf[3] = modelMat[3][0];modelMatrixf[7] = modelMat[3][1];
-
-	modelMatrixf[8] = modelMat[0][2];modelMatrixf[12] = modelMat[0][3];
-	modelMatrixf[9] = modelMat[1][2];modelMatrixf[13] = modelMat[1][3];
-	modelMatrixf[10] = modelMat[2][2];modelMatrixf[14] = modelMat[2][3];
-	modelMatrixf[11] = modelMat[3][2];modelMatrixf[15] = modelMat[3][3];
 	
 	// set up projection matricies
 	GLuint modelMatrix = glGetUniformLocationARB(program, "model_matrix");
-	glUniformMatrix4fv( modelMatrix, 1, GL_FALSE, modelMatrixf );
+	glUniformMatrix4fv( modelMatrix, 1, GL_TRUE, modelMat );
 
 	glBufferData( GL_ARRAY_BUFFER, sizeof(cylinderPointsBuf) + sizeof(cylinderColorsBuf), NULL, GL_STATIC_DRAW );
 	glBufferSubData( GL_ARRAY_BUFFER, 0, sizeof(cylinderPointsBuf), cylinderPointsBuf );
@@ -554,7 +537,7 @@ void init( void )
     glBindTexture(GL_TEXTURE_2D, texture);
 	// sets the default color to clear screen
 
-    glClearColor( 1.0, 1.0, 1.0, 1.0 ); // white background
+    glClearColor( 0.0, 0.0, 0.0, 1.0 ); // white background
 }
 float RandomNumber(float Min, float Max)
 {
@@ -562,11 +545,8 @@ float RandomNumber(float Min, float Max)
 }
 void drawGround( void )
 {
-	//glClear( GL_COLOR_BUFFER_BIT );
-	
 	mat4 modelMat = Angel::identity();;
-	mat4 viewMat = LookAt( vec4(0,30,100,1), vec4(0,0,0,1), vec4(0,1,0,0) );
-	modelMat = modelMat * Angel::Translate(0.0 , -10.0 ,0.0) * Angel::RotateZ(0) * Angel::RotateY(0) * Angel::RotateX(0);
+	modelMat = modelMat * Angel::Translate(0.0 , -20.0 ,0.0) * Angel::RotateZ(0) * Angel::RotateY(0) * Angel::RotateX(0);
 	mat4 m = viewMat * modelMat;
     GLuint modelMatrix = glGetUniformLocationARB(program, "model_matrix");
     glUniformMatrix4fv( modelMatrix, 1, GL_TRUE, m );
@@ -586,7 +566,6 @@ void drawGround( void )
 }
 void drawTree( int fileIndex)
 {
-	//glClear( GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT );     // clear the window
 	if(fileIndex == -1)
 	{
 		drawForest();
@@ -612,28 +591,29 @@ void drawTree( int fileIndex)
 		currentAngle.y = 0;
 		currentAngle.z = 0;
 
-		currentPoint.y = -5.0;
+		currentPoint.y = -20.0;
 		switch(fileIndex)
 		{
 			case 0:
-				currentPoint.x = RandomNumber(-330, 330);
-				currentPoint.z = RandomNumber(-500, -325);
+				currentPoint.y = -25.0;
+				currentPoint.x = RandomNumber(-100, 100);
+				currentPoint.z = RandomNumber(-300, -125);
 				break;
 			case 1:
-				currentPoint.x = RandomNumber(-80, 80);
-				currentPoint.z = RandomNumber(-200, -75);
+				currentPoint.x = RandomNumber(-30, 30);
+				currentPoint.z = RandomNumber(-50, -10);
 				break;
 			case 2:
-				currentPoint.x = RandomNumber(-20, 20);
+				currentPoint.x = RandomNumber(-50, 50);
 				currentPoint.z = RandomNumber(-50, -25);
 				break;
 			case 3:
 				currentPoint.x = RandomNumber(-20, 20);
-				currentPoint.z = RandomNumber(-50, -25);
+				currentPoint.z = RandomNumber(-1, -0.5);
 				break;
 			case 4:
-				currentPoint.x = RandomNumber(-20, 20);
-				currentPoint.z = RandomNumber(-30, -25);
+				currentPoint.x = RandomNumber(-27, 27);
+				currentPoint.z = RandomNumber(-1, 15);
 				break;
 
 		}
@@ -692,7 +672,7 @@ void drawForest( void )
 {
 	drawTree(0);
 	drawTree(1);
-	drawTree(3);
+	drawTree(4);
 }
 void flush( void )
 {
@@ -774,8 +754,6 @@ int main( int argc, char **argv )
 	plyFileLoad(0);
 	plyFileLoad(1);
 	//plyFileLoad(2);
-	//loadGround();
-	//drawGround();
 	/* normalize the points for sphere and cylinder, 
 	   so that they will be at the same scale */
 	normalize();
