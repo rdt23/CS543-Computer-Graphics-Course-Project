@@ -6,6 +6,7 @@ in  vec4 vColor;
 
 out vec2 texCoord;
 out vec4 interpolatedColor;
+out float zValue;
 
 uniform mat4 Projection;
 uniform mat4 model_matrix;
@@ -16,4 +17,5 @@ void main()
     texCoord = vTexCoord.st;
     gl_Position = Projection * model_matrix * vPosition;
 	interpolatedColor = vColor;
+	zValue = gl_Position.z;
 }

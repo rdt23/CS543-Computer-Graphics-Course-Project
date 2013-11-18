@@ -97,7 +97,7 @@ static int countOfFace[4];
 //store points from ply files
 point4 points[200];
 //store mesh information from ply files
-face3    face[10500];
+face3  face[10500];
 
 point4 carPointsBuf[32000];
 color4 carColorsBuf[32000];
@@ -125,23 +125,23 @@ vec2 textureCoordinates[6] = {
 		vec2( 0.0,30.0)
 	};
 point4 pointsGround[6] = {
-	point4( -100.0, 0.0, -200.0, 1.0 ),
-	point4( -100.0, 0.0,  200.0, 1.0 ),
-	point4(  100.0, 0.0,  200.0, 1.0 ),
-	point4(  100.0, 0.0,  200.0, 1.0 ),
-	point4(  100.0, 0.0, -200.0, 1.0 ),
-	point4( -100.0, 0.0, -200.0, 1.0 )
+	point4( -200.0, 0.0, -500.0, 1.0 ),
+	point4( -200.0, 0.0,  500.0, 1.0 ),
+	point4(  200.0, 0.0,  500.0, 1.0 ),
+	point4(  200.0, 0.0,  500.0, 1.0 ),
+	point4(  200.0, 0.0, -500.0, 1.0 ),
+	point4( -200.0, 0.0, -500.0, 1.0 )
     };
 
-mat4 viewMat = LookAt(vec4(0,0,70,1), vec4(0,0,0,1), vec4(0,1,0,0));
+mat4 viewMat = LookAt(vec4(0,37,70,1), vec4(0,0,0,1), vec4(0,1,0,0));
 
 int fogParameter = 0;// [used in shader] - 0:diable; 1:enabled with liner increment; 2:enabled with exponential increment
 int enableShadows = 0;
-float light[3] = {70,600,-20}; // location of light
+float light[3] = {70,300,-200}; // location of light
 
-void setAndLoadTexture( int texttureIndex )
+void setAndLoadTexture( int textureIndex )
 {
-	if(!bmpread(textureFileName[texttureIndex], 0, &bitmap))
+	if(!bmpread(textureFileName[textureIndex], 0, &bitmap))
 	{
 		fprintf(stderr, "%s:error loading bitmap file\n", "grass.bmp");
 		exit(1);
@@ -352,26 +352,30 @@ void drawCylinder( void )
 	glPolygonMode( GL_FRONT_AND_BACK, GL_LINE );
 
 	point4 shadowPoint[2];
+	color4 shadowColor[2] = {color4(0,0,0,1),color4(0,0,0,1)};
 	mat4 m; // shadow projection matrix initially identity
 	m[3][1] = -1.0/light[1]; 
 	m[3][3] = 0; 
-	Angel::mat4 shadowsModelView = Translate(light[0], light[1], light[2]) * m * Translate(-light[0], -light[1], -light[2]);
+	
 
 	Angel::mat4 modelMat = Angel::identity();
 	modelMat = modelMat * Angel::Translate(currentPoint.x , currentPoint.y , currentPoint.z) 
 						* Angel::RotateZ(currentAngle.z) * Angel::RotateY(currentAngle.y-90.0f) * Angel::RotateX(currentAngle.x);
 
+	//Angel::mat4 shadowsModelView = Translate(light[0], light[1], light[2]) * m * Translate(-light[0], -light[1], -light[2]) * modelMat;
+
 	// for draw shadows use
-	shadowPoint[0] = shadowsModelView * currentPoint;
+	shadowPoint[0] =currentPoint;// shadowsModelView * currentPoint;
 
 	// update currentPoint now
 	currentPoint = modelMat * point4(0,1.0f,0,1);
+	Angel::mat4 shadowsModelView = viewMat * Translate(0, 1, 0) * Translate(light[0], light[1], light[2]) * m * Translate(-light[0], -light[1], -light[2]);
 	modelMat = viewMat * modelMat;
 	//currentAngle.w = 1.0f;
 	currentPoint.w = 1.0f;
 	
 	// for draw shadows use
-	shadowPoint[1] = shadowsModelView * currentPoint;
+	shadowPoint[1] = currentPoint;//shadowsModelView * currentPoint;
 
 	// set up projection matricies
 	GLuint modelMatrix = glGetUniformLocationARB(program, "model_matrix");
@@ -394,11 +398,19 @@ void drawCylinder( void )
 
 	if(enableShadows == 1)
 	{
-		shadowPoint[0].y -= 10;
-		shadowPoint[1].y -= 10;
 		GLuint shadowModelMatrix = glGetUniformLocationARB(program, "model_matrix");
 		glUniformMatrix4fv( shadowModelMatrix, 1, GL_TRUE, shadowsModelView );
-		glBufferData( GL_ARRAY_BUFFER, sizeof(shadowPoint) , shadowPoint, GL_STATIC_DRAW );
+
+		glBufferData( GL_ARRAY_BUFFER, sizeof(shadowPoint) + sizeof(shadowColor) , NULL, GL_STATIC_DRAW );
+		glBufferSubData( GL_ARRAY_BUFFER, 0, sizeof(shadowPoint), shadowPoint );
+		glBufferSubData( GL_ARRAY_BUFFER, sizeof(shadowPoint), sizeof(shadowColor), shadowColor );
+
+		enableTreeColor = glGetUniformLocation(program, "enableTreeColor");
+		glUniform1i( enableTreeColor, 1);
+		vColor = glGetAttribLocation( program, "vColor" ); 
+		glEnableVertexAttribArray( vColor );
+		glVertexAttribPointer( vColor, 4, GL_FLOAT, GL_FALSE, 0, BUFFER_OFFSET(sizeof(shadowPoint)) );
+
 
 		glEnable( GL_DEPTH_TEST );
 		glDrawArrays( GL_LINES, 0, 2 );
@@ -562,7 +574,7 @@ float RandomNumber(float Min, float Max)
 void drawGround( void )
 {
 	mat4 modelMat = Angel::identity();;
-	modelMat = modelMat * Angel::Translate(0.0 , -20.0 ,0.0) * Angel::RotateZ(0) * Angel::RotateY(0) * Angel::RotateX(0);
+	modelMat = modelMat * Angel::Translate(0.0 , 0.0 ,0.0) * Angel::RotateZ(0) * Angel::RotateY(0) * Angel::RotateX(0);
 	mat4 m = viewMat * modelMat;
     GLuint modelMatrix = glGetUniformLocationARB(program, "model_matrix");
     glUniformMatrix4fv( modelMatrix, 1, GL_TRUE, m );
@@ -597,11 +609,10 @@ void drawTree( int fileIndex)
 		currentAngle.y = 0;
 		currentAngle.z = 0;
 
-		currentPoint.y = -10.0;
+		currentPoint.y = 0.0;
 		switch(fileIndex)
 		{
 			case 0:
-				currentPoint.y = -20.0;
 				currentPoint.x = -77;
 				currentPoint.z = -227;
 				for(int i = 0; i < countOfFace[0]*3; i++)
@@ -627,12 +638,28 @@ void drawTree( int fileIndex)
 				
 				break;
 			case 2:
-				currentPoint.x = RandomNumber(-50, 50);
-				currentPoint.z = RandomNumber(-50, -25);
+				currentPoint.x = 17;
+				currentPoint.z = 40;
+				for(int i = 0; i < countOfFace[0]*3; i++)
+				{
+					cylinderColorsBuf[i] = color4( 0.0, 1.0, 0.0, 1.0 );
+				}
+				for(int i = 0; i < countOfFace[1]*3; i++)
+				{
+					sphereColorsBuf[i] = color4( 0.0, 1.0, 0.0, 1.0 );
+				}
 				break;
 			case 3:
-				currentPoint.x = RandomNumber(-20, 20);
-				currentPoint.z = RandomNumber(-1, -0.5);
+				currentPoint.x = 17;
+				currentPoint.z = 10;
+				for(int i = 0; i < countOfFace[0]*3; i++)
+				{
+					cylinderColorsBuf[i] = color4( 0.0, 1.0, 0.0, 1.0 );
+				}
+				for(int i = 0; i < countOfFace[1]*3; i++)
+				{
+					sphereColorsBuf[i] = color4( 0.0, 1.0, 0.0, 1.0 );
+				}
 				break;
 			case 4:
 				for(int i = 0; i < countOfFace[0]*3; i++)
@@ -701,7 +728,7 @@ void drawTree( int fileIndex)
 }
 void drawForest( void )
 {
-	drawTree(0);
+	drawTree(3);
 	drawTree(1);
 	drawTree(4);
 }
