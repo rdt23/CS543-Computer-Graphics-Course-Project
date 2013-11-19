@@ -991,22 +991,38 @@ void keyboard( unsigned char key, int x, int y )
 			break;
 
 		case 't':
-			textureModeValue = 2;
+			if(textureModeValue == 2)
+			{
+				textureModeValue = 1;
+			}
+			else
+			{
+				textureModeValue = 2;
+			}
 			display();
 			break;
 
 		case 'v':
-			textureModeValue = 3;
-			display();
-			break;
-
-		case 'x':
-			textureModeValue = 1;
+			if(textureModeValue == 3)
+			{
+				textureModeValue = 1;
+			}
+			else
+			{
+				textureModeValue = 3;
+			}
 			display();
 			break;
 
 		case 'k':
-			textureModeValue = 10;
+			if(textureModeValue == 10)
+			{
+				textureModeValue = 1;
+			}
+			else
+			{
+				textureModeValue = 10;
+			}
 			display();
 			break;
 
