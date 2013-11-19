@@ -147,7 +147,6 @@ int enableShadows = 0;
 float light[3] = {70,300,-200}; // location of light
 static int textureModeValue = 1;
 
-
 void setAndLoadTexture( int textureIndex )
 {
 	if(!bmpread(textureFileName[textureIndex], 0, &bitmap))
@@ -375,7 +374,8 @@ void drawCylinder( void )
 {
 	for(int i = 0; i < countOfFace[0]*3; i++)
 	{
-		cylinderNormalsBuf[i] = vec4(normalize(cross(cylinderPointsBuf[i- i%3 + 1] - cylinderPointsBuf[i- i%3 ], cylinderPointsBuf[i- i%3 + 2] - cylinderPointsBuf[i- i%3 + 1])), 1.0f);
+		cylinderNormalsBuf[i] = vec4(normalize(cross(cylinderPointsBuf[i- i%3 + 1] - cylinderPointsBuf[i- i%3 ], 
+													 cylinderPointsBuf[i- i%3 + 2] - cylinderPointsBuf[i- i%3 + 1])), 1.0f);
 	}
 
 	point4 shadowPoint[2];
@@ -414,14 +414,14 @@ void drawCylinder( void )
 	}
 	else
 	{
-		glPolygonMode( GL_FRONT_AND_BACK, GL_FILL );
+		glPolygonMode( GL_FRONT_AND_BACK, GL_LINE );
 		glBufferData( GL_ARRAY_BUFFER, sizeof(cylinderPointsBuf) + sizeof(cylinderNormalsBuf), NULL, GL_STATIC_DRAW );
 		glBufferSubData( GL_ARRAY_BUFFER, 0, sizeof(cylinderPointsBuf), cylinderPointsBuf );
 		glBufferSubData( GL_ARRAY_BUFFER, sizeof(cylinderPointsBuf), sizeof(cylinderNormalsBuf), cylinderNormalsBuf );
 	}
 
 	GLint textureMode = glGetUniformLocation(program, "textureMode");
-    glUniform1i( textureMode, textureModeValue);
+	glUniform1i( textureMode, textureModeValue);
 
 	GLuint vColor = glGetAttribLocation( program, "vColor" ); 
 	glEnableVertexAttribArray( vColor );
@@ -499,7 +499,16 @@ void drawCar( void )
 	}
 
 	GLint textureMode = glGetUniformLocation(program, "textureMode");
-	glUniform1i( textureMode, textureModeValue);
+	if(textureModeValue == 10)
+	{
+		int randMode = rand() % 2 + 2;
+		glUniform1i( textureMode, randMode);
+		textureModeValue = 10;
+	}
+	else
+	{
+		glUniform1i( textureMode, textureModeValue);
+	}
 
 	GLuint vColor = glGetAttribLocation( program, "vColor" ); 
 	glEnableVertexAttribArray( vColor );
@@ -571,11 +580,19 @@ void drawBox( void )
 		glBufferSubData( GL_ARRAY_BUFFER, 0, sizeof(boxPointsBuf), boxPointsBuf );
 		glBufferSubData( GL_ARRAY_BUFFER, sizeof(boxPointsBuf), sizeof(boxNormalsBuf), boxNormalsBuf );
 	}
-
-	GLint textureMode = glGetUniformLocation(program, "textureMode");
-    glUniform1i( textureMode, textureModeValue);
-
 	
+	GLint textureMode = glGetUniformLocation(program, "textureMode");
+	if(textureModeValue == 10)
+	{
+		int randMode = rand() % 2 + 2;
+		glUniform1i( textureMode, randMode);
+		textureModeValue = 10;
+	}
+	else
+	{
+		glUniform1i( textureMode, textureModeValue);
+	}
+
 	GLuint vColor = glGetAttribLocation( program, "vColor" ); 
 	glEnableVertexAttribArray( vColor );
 	glVertexAttribPointer( vColor, 4, GL_FLOAT, GL_FALSE, 0, BUFFER_OFFSET(sizeof(boxColorsBuf)) );
@@ -702,7 +719,7 @@ void drawGround( void )
     glDrawArrays( GL_TRIANGLES, 0, 6 );
 	glDisable( GL_DEPTH_TEST );
 }
-void drawTree( int fileIndex)
+void drawTree( int fileIndex )
 {
 	if(fileIndex == -1)
 	{
@@ -781,7 +798,7 @@ void drawTree( int fileIndex)
 					sphereColorsBuf[i] = color4( 0.0, 0.0, 1.0, 1.0 );
 				}
 				currentPoint.x = 17;
-				currentPoint.z = 30;
+				currentPoint.z = 37;
 				break;
 
 		}
@@ -794,7 +811,10 @@ void drawTree( int fileIndex)
 			{
 				case 'F':
 					drawCylinder();
-					drawSphere();
+					if(textureModeValue == 1)
+					{
+						drawSphere();
+					}
 					break;
 				case '+':
 					currentAngle.x += rotaionX;
@@ -838,9 +858,22 @@ void drawTree( int fileIndex)
 }
 void drawForest( void )
 {
-	drawTree(3);
-	drawTree(1);
-	drawTree(4);
+	if(textureModeValue == 10)
+	{
+		textureModeValue = rand() % 2 + 2;
+		drawTree(3);
+		textureModeValue = rand() % 2 + 2;
+		drawTree(1);
+		textureModeValue = rand() % 2 + 2;
+		drawTree(4);
+		textureModeValue = 10;
+	}
+	else
+	{
+		drawTree(3);
+		drawTree(1);
+		drawTree(4);
+	}
 }
 void flush( void )
 {
@@ -973,7 +1006,7 @@ void keyboard( unsigned char key, int x, int y )
 			break;
 
 		case 'k':
-			fogParameter = (fogParameter+1) % 3;
+			textureModeValue = 10;
 			display();
 			break;
 

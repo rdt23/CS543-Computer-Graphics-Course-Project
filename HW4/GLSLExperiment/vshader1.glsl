@@ -3,7 +3,6 @@
 in  vec4 vPosition;
 in  vec2 vTexCoord;
 in  vec4 vColor;
-in  vec4 eyeMatrix;
 in  vec4 Normal;
 
 out vec2 texCoord;

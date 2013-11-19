@@ -51,7 +51,6 @@ void main()
 		default:
 			factForFog = 1.0;
 			break;
-
 	}
 
 	factForFog = clamp(factForFog, 0.0, 1.0);
