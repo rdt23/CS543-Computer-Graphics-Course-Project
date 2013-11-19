@@ -220,8 +220,15 @@ void plyFileLoad(int fileIndex)
 	
 	for(int j = 0; j < countOfVertex[fileIndex]; j++)
 	{	//read each vertex
-		fscanf(inStream,"%f %f %f", &z, &x, &y);
-		
+		if(fileIndex == 2)
+		{
+			fscanf(inStream,"%f %f %f", &x, &y, &z);
+		}
+		else
+		{
+			fscanf(inStream,"%f %f %f", &z, &x, &y);
+		}
+
 		if(j == 0)
 		{
 			xMax[fileIndex] = xMin[fileIndex] = x;
@@ -428,7 +435,8 @@ void drawCar( void )
 	for(int i = 0; i < countOfFace[2]*3; i++)
 	{
 		carColorsBuf[i] = color4(1.0, 1.0, 0.0, 1.0 );
-		carNormalsBuf[i] = normalize(cross(carPointsBuf[i/3 + 1] - carPointsBuf[i/3], carPointsBuf[i/3 + 2] - carPointsBuf[i/3 + 1]));
+		carNormalsBuf[i] = vec4(normalize(cross(carPointsBuf[i- i%3 + 1] - carPointsBuf[i- i%3 ], carPointsBuf[i- i%3  + 2] - carPointsBuf[i- i%3  + 1])), 1.0f);
+
 	}
 
 	glPolygonMode( GL_FRONT_AND_BACK, GL_FILL );
@@ -437,7 +445,7 @@ void drawCar( void )
 	m[3][1] = -1.0/light[1]; 
 	m[3][3] = 0;
 	
-	modelMat = modelMat *Angel::Translate(-20, 10, 50) * Angel::RotateY(90.0f) * Angel::RotateZ(90.0f);
+	modelMat = modelMat *Angel::Translate(-20, 10, -0) * Angel::RotateY(0.0f) * Angel::RotateZ(0.0f);
 	modelMat = modelMat *Angel::Scale(2.7,2.7,2.7);
 	Angel::mat4 shadowsModelView = viewMat * Translate(0, 1, 0) * Translate(light[0], light[1], light[2]) * m * Translate(-light[0], -light[1], -light[2]) * modelMat;
 	modelMat = viewMat * modelMat;
@@ -489,7 +497,7 @@ void drawBox( void )
 {
 	for(int i = 0; i < countOfFace[3]*3; i++)
 	{
-		boxNormalsBuf[i] = normalize(cross(boxPointsBuf[i/3 + 1] - boxPointsBuf[i/3], boxPointsBuf[i/3 + 2] - boxPointsBuf[i/3 + 1]));
+		boxNormalsBuf[i] = vec4(normalize(cross(boxPointsBuf[i- i%3 + 1] - boxPointsBuf[i- i%3 ], boxPointsBuf[i- i%3 + 2] - boxPointsBuf[i- i%3 + 1])), 1.0f);
 	}
 
 	glPolygonMode( GL_FRONT_AND_BACK, GL_FILL );
@@ -498,7 +506,7 @@ void drawBox( void )
 	m[3][1] = -1.0/light[1]; 
 	m[3][3] = 0;
 	
-	modelMat = modelMat *Angel::Translate(-0, 15, 20) * Angel::RotateY(0.0f) * Angel::RotateZ(0.0f);
+	modelMat = modelMat *Angel::Translate(-0, 15, 20) * Angel::RotateX(-90.0f) * Angel::RotateY(0.0f) * Angel::RotateZ(0.0f);
 	modelMat = modelMat *Angel::Scale(7,7,7);
 	Angel::mat4 shadowsModelView = viewMat * Translate(0, 1, 0) * Translate(light[0], light[1], light[2]) * m * Translate(-light[0], -light[1], -light[2]) * modelMat;
 	modelMat = viewMat * modelMat;
@@ -801,7 +809,7 @@ void display()
 	setAndLoadTexture(textureIndex);
     drawGround();
 	drawCar();
-	drawBox();
+	//drawBox();
 	drawTree(-1);
     flush();
 }
@@ -843,12 +851,12 @@ void cubeMapInit( void )
 	bmpread_t bitmap1, bitmap2, bitmap3, bitmap4, bitmap5, bitmap6;
 	GLuint texMapLocation;
 	GLuint tex[1];
-	bmpread("nvnegx.bmp", 0, &bitmap1);
-	bmpread("nvnegy.bmp", 0, &bitmap2);
-	bmpread("nvnegz.bmp", 0, &bitmap3);
-	bmpread("nvposx.bmp", 0, &bitmap4);
-	bmpread("nvposy.bmp", 0, &bitmap5);
-	bmpread("nvposz.bmp", 0, &bitmap6);
+	bmpread("nvnegx.bmp", 0, &bitmap2);
+	bmpread("nvnegy.bmp", 0, &bitmap4);
+	bmpread("nvnegz.bmp", 0, &bitmap6);
+	bmpread("nvposx.bmp", 0, &bitmap1);
+	bmpread("nvposy.bmp", 0, &bitmap3);
+	bmpread("nvposz.bmp", 0, &bitmap5);
 
 	glEnable(GL_TEXTURE_CUBE_MAP);
 	// Create texture object
@@ -860,8 +868,8 @@ void cubeMapInit( void )
 	glTexImage2D(GL_TEXTURE_CUBE_MAP_NEGATIVE_X ,0, GL_RGB, bitmap2.width, bitmap2.height, 0, GL_RGB, GL_UNSIGNED_BYTE, bitmap2.rgb_data);
 	glTexImage2D(GL_TEXTURE_CUBE_MAP_POSITIVE_Y ,0, GL_RGB, bitmap3.width, bitmap3.height, 0, GL_RGB, GL_UNSIGNED_BYTE, bitmap3.rgb_data);
 	glTexImage2D(GL_TEXTURE_CUBE_MAP_NEGATIVE_Y ,0, GL_RGB, bitmap4.width, bitmap4.height, 0, GL_RGB, GL_UNSIGNED_BYTE, bitmap4.rgb_data);
-	glTexImage2D(GL_TEXTURE_CUBE_MAP_NEGATIVE_Z ,0, GL_RGB, bitmap5.width, bitmap5.height, 0, GL_RGB, GL_UNSIGNED_BYTE, bitmap5.rgb_data);
-	glTexImage2D(GL_TEXTURE_CUBE_MAP_POSITIVE_Z ,0, GL_RGB, bitmap6.width, bitmap6.height, 0, GL_RGB, GL_UNSIGNED_BYTE, bitmap6.rgb_data);
+	glTexImage2D(GL_TEXTURE_CUBE_MAP_POSITIVE_Z ,0, GL_RGB, bitmap5.width, bitmap5.height, 0, GL_RGB, GL_UNSIGNED_BYTE, bitmap5.rgb_data);
+	glTexImage2D(GL_TEXTURE_CUBE_MAP_NEGATIVE_Z ,0, GL_RGB, bitmap6.width, bitmap6.height, 0, GL_RGB, GL_UNSIGNED_BYTE, bitmap6.rgb_data);
 
 	glTexParameteri(GL_TEXTURE_CUBE_MAP,GL_TEXTURE_MIN_FILTER,GL_NEAREST);
 	glTexParameteri(GL_TEXTURE_CUBE_MAP,GL_TEXTURE_MAG_FILTER,GL_NEAREST);
