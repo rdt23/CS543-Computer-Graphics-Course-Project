@@ -557,7 +557,7 @@ void drawBox( void )
 	m[3][1] = -1.0/light[1]; 
 	m[3][3] = 0;
 	
-	modelMat = modelMat *Angel::Translate(-0, 13, -20) * Angel::RotateX(-90.0f) * Angel::RotateY(0.0f) * Angel::RotateZ(90.0f);
+	modelMat = modelMat *Angel::Translate(-0, 13, -20) * Angel::RotateX(0.0f) * Angel::RotateY(0.0f) * Angel::RotateZ(0.0f);
 	modelMat = modelMat *Angel::Scale(11,11,11);
 	Angel::mat4 shadowsModelView = viewMat * Translate(0, 1, 0) * Translate(light[0], light[1], light[2]) * m * Translate(-light[0], -light[1], -light[2]) * modelMat;
 	modelMat = viewMat * modelMat;
