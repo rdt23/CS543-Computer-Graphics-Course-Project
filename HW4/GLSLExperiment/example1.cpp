@@ -100,14 +100,18 @@ point4 points[6000];
 //store mesh information from ply files
 face3  face[10500];
 
-point4 carPointsBuf[32000];
-color4 carColorsBuf[32000];
+point4  carPointsBuf[32000];
+color4  carColorsBuf[32000];
 point4 carNormalsBuf[32000];
 
-point4 spherePointsBuf[1000];
-color4 sphereColorsBuf[1000];
-point4 cylinderPointsBuf[200];
-color4 cylinderColorsBuf[200];
+point4  spherePointsBuf[1000];
+color4  sphereColorsBuf[1000];
+point4 sphereNormalsBuf[1000];
+
+point4  cylinderPointsBuf[200];
+color4  cylinderColorsBuf[200];
+point4 cylinderNormalsBuf[200];
+
 point4 boxPointsBuf[36];
 color4 boxColorsBuf[36];
 point4 boxNormalsBuf[36];
@@ -342,8 +346,8 @@ void drawSphere( void )
 	GLuint modelMatrix = glGetUniformLocationARB(program, "model_matrix");
 	glUniformMatrix4fv( modelMatrix, 1, GL_TRUE, modelMat);
 
-	GLint enableTreeColor = glGetUniformLocation(program, "enableTreeColor");
-    glUniform1i( enableTreeColor, 1);
+	GLint textureMode = glGetUniformLocation(program, "textureMode");
+    glUniform1i( textureMode, 1);
 
 	glBufferData( GL_ARRAY_BUFFER, sizeof(spherePointsBuf) + sizeof(sphereColorsBuf), NULL, GL_STATIC_DRAW );
 	glBufferSubData( GL_ARRAY_BUFFER, 0, sizeof(spherePointsBuf), spherePointsBuf );
@@ -391,8 +395,8 @@ void drawCylinder( void )
 	glBufferSubData( GL_ARRAY_BUFFER, 0, sizeof(cylinderPointsBuf), cylinderPointsBuf );
 	glBufferSubData( GL_ARRAY_BUFFER, sizeof(cylinderPointsBuf), sizeof(cylinderColorsBuf), cylinderColorsBuf );
 
-	GLint enableTreeColor = glGetUniformLocation(program, "enableTreeColor");
-    glUniform1i( enableTreeColor, 1);
+	GLint textureMode = glGetUniformLocation(program, "textureMode");
+    glUniform1i( textureMode, 1);
 
 	GLuint vColor = glGetAttribLocation( program, "vColor" ); 
 	glEnableVertexAttribArray( vColor );
@@ -411,8 +415,8 @@ void drawCylinder( void )
 		glBufferSubData( GL_ARRAY_BUFFER, 0, sizeof(shadowPoint), shadowPoint );
 		glBufferSubData( GL_ARRAY_BUFFER, sizeof(shadowPoint), sizeof(shadowColor), shadowColor );
 
-		enableTreeColor = glGetUniformLocation(program, "enableTreeColor");
-		glUniform1i( enableTreeColor, 1);
+		textureMode = glGetUniformLocation(program, "textureMode");
+		glUniform1i( textureMode, 1);
 		vColor = glGetAttribLocation( program, "vColor" ); 
 		glEnableVertexAttribArray( vColor );
 		glVertexAttribPointer( vColor, 4, GL_FLOAT, GL_FALSE, 0, BUFFER_OFFSET(sizeof(shadowPoint)) );
@@ -430,7 +434,6 @@ void drawCar( void )
 	{
 		carColorsBuf[i] = color4(1.0, 1.0, 0.0, 1.0 );
 		carNormalsBuf[i] = vec4(normalize(cross(carPointsBuf[i- i%3] - carPointsBuf[i- i%3 + 1], carPointsBuf[i- i%3 + 2] - carPointsBuf[i- i%3 + 1])), 1.0f);
-
 	}
 
 	glPolygonMode( GL_FRONT_AND_BACK, GL_FILL );
@@ -439,7 +442,7 @@ void drawCar( void )
 	m[3][1] = -1.0/light[1]; 
 	m[3][3] = 0;
 	
-	modelMat = modelMat *Angel::Translate(-20, 10, 20) * Angel::RotateY(0.0f) * Angel::RotateZ(0.0f);
+	modelMat = modelMat *Angel::Translate(-20, 7, 20) * Angel::RotateY(0.0f) * Angel::RotateZ(0.0f);
 	modelMat = modelMat *Angel::Scale(2.7,2.7,2.7);
 	Angel::mat4 shadowsModelView = viewMat * Translate(0, 1, 0) * Translate(light[0], light[1], light[2]) * m * Translate(-light[0], -light[1], -light[2]) * modelMat;
 	modelMat = viewMat * modelMat;
@@ -452,8 +455,8 @@ void drawCar( void )
 	glBufferSubData( GL_ARRAY_BUFFER, 0, sizeof(carPointsBuf), carPointsBuf );
 	glBufferSubData( GL_ARRAY_BUFFER, sizeof(carPointsBuf), sizeof(carNormalsBuf), carNormalsBuf );
 
-	GLint enableTreeColor = glGetUniformLocation(program, "enableTreeColor");
-    glUniform1i( enableTreeColor, 2);
+	GLint textureMode = glGetUniformLocation(program, "textureMode");
+    glUniform1i( textureMode, 2);
 
 	GLuint vColor = glGetAttribLocation( program, "vColor" ); 
 	glEnableVertexAttribArray( vColor );
@@ -472,9 +475,12 @@ void drawCar( void )
 		GLuint shadowModelMatrix = glGetUniformLocationARB(program, "model_matrix");
 		glUniformMatrix4fv( shadowModelMatrix, 1, GL_TRUE, shadowsModelView );
 
-		enableTreeColor = glGetUniformLocation(program, "enableTreeColor");
-		glUniform1i( enableTreeColor, 1);
-
+		textureMode = glGetUniformLocation(program, "textureMode");
+		glUniform1i( textureMode, 1);
+		for(int i = 0; i < countOfFace[2]*3; i++)
+		{
+			carColorsBuf[i] = color4(0.0, 0.0, 0.0, 1.0 );
+		}
 		glBufferData( GL_ARRAY_BUFFER, sizeof(carPointsBuf) + sizeof(carColorsBuf), NULL, GL_STATIC_DRAW );
 		glBufferSubData( GL_ARRAY_BUFFER, 0, sizeof(carPointsBuf), carPointsBuf );
 		glBufferSubData( GL_ARRAY_BUFFER, sizeof(carPointsBuf), sizeof(carColorsBuf), carColorsBuf );
@@ -498,8 +504,8 @@ void drawBox( void )
 	m[3][1] = -1.0/light[1]; 
 	m[3][3] = 0;
 	
-	modelMat = modelMat *Angel::Translate(-0, 15, 20) * Angel::RotateX(-90.0f) * Angel::RotateY(0.0f) * Angel::RotateZ(0.0f);
-	modelMat = modelMat *Angel::Scale(7,7,7);
+	modelMat = modelMat *Angel::Translate(-0, 13, -20) * Angel::RotateX(-90.0f) * Angel::RotateY(0.0f) * Angel::RotateZ(90.0f);
+	modelMat = modelMat *Angel::Scale(11,11,11);
 	Angel::mat4 shadowsModelView = viewMat * Translate(0, 1, 0) * Translate(light[0], light[1], light[2]) * m * Translate(-light[0], -light[1], -light[2]) * modelMat;
 	modelMat = viewMat * modelMat;
 	
@@ -511,14 +517,14 @@ void drawBox( void )
 	glBufferSubData( GL_ARRAY_BUFFER, 0, sizeof(boxPointsBuf), boxPointsBuf );
 	glBufferSubData( GL_ARRAY_BUFFER, sizeof(boxPointsBuf), sizeof(boxNormalsBuf), boxNormalsBuf );
 
-	GLint enableTreeColor = glGetUniformLocation(program, "enableTreeColor");
-    glUniform1i( enableTreeColor, 2);
+	GLint textureMode = glGetUniformLocation(program, "textureMode");
+    glUniform1i( textureMode, 3);
 
-	/*
+	
 	GLuint vColor = glGetAttribLocation( program, "vColor" ); 
 	glEnableVertexAttribArray( vColor );
 	glVertexAttribPointer( vColor, 4, GL_FLOAT, GL_FALSE, 0, BUFFER_OFFSET(sizeof(boxColorsBuf)) );
-	*/
+	
 	GLuint vNormal = glGetAttribLocation( program, "Normal" ); 
 	glEnableVertexAttribArray( vNormal );
 	glVertexAttribPointer( vNormal, 4, GL_FLOAT, GL_FALSE, 0, BUFFER_OFFSET(sizeof(boxNormalsBuf)) );
@@ -536,6 +542,8 @@ void drawBox( void )
 		{
 			boxColorsBuf[i] = color4(0.0, 0.0, 0.0, 1.0); 
 		}
+		GLint textureMode = glGetUniformLocation(program, "textureMode");
+		glUniform1i( textureMode, 1);
 
 		glBufferData( GL_ARRAY_BUFFER, sizeof(boxPointsBuf) + sizeof(boxColorsBuf), NULL, GL_STATIC_DRAW );
 		glBufferSubData( GL_ARRAY_BUFFER, 0, sizeof(boxPointsBuf), boxPointsBuf );
@@ -629,8 +637,8 @@ void drawGround( void )
     GLuint modelMatrix = glGetUniformLocationARB(program, "model_matrix");
     glUniformMatrix4fv( modelMatrix, 1, GL_TRUE, m );
 	
-	GLint enableTreeColor = glGetUniformLocation(program, "enableTreeColor");
-    glUniform1i( enableTreeColor, 0);
+	GLint textureMode = glGetUniformLocation(program, "textureMode");
+    glUniform1i( textureMode, 0);
 
 	glBufferData( GL_ARRAY_BUFFER, sizeof(pointsGround) + sizeof(textureCoordinates), NULL, GL_STATIC_DRAW );
 	glBufferSubData( GL_ARRAY_BUFFER, 0, sizeof(pointsGround), pointsGround );
@@ -720,8 +728,8 @@ void drawTree( int fileIndex)
 				{
 					sphereColorsBuf[i] = color4( 0.0, 0.0, 1.0, 1.0 );
 				}
-				currentPoint.x = -17;
-				currentPoint.z = 20;
+				currentPoint.x = 17;
+				currentPoint.z = 30;
 				break;
 
 		}
@@ -796,13 +804,11 @@ void display()
 	GLint enableFogWithSpecialIncrement = glGetUniformLocation(program, "enableFogWithSpecialIncrement");
     glUniform1i( enableFogWithSpecialIncrement, fogParameter);
 
-	//printf("fogParameter = %d\n", fogParameter);
-
 	setAndLoadTexture(textureIndex);
     drawGround();
 	drawCar();
-	//drawBox();
-	drawTree(-1);
+	drawBox();
+	drawForest();
     flush();
 }
  //normalize cylinder and sphere, so that they have the same diameter, and the length of cylinder will be 1 (also change the start point of cylinder to the buttom).
@@ -869,7 +875,12 @@ void cubeMapInit( void )
 	texMapLocation = glGetUniformLocation(program, "texMap"); 
 	glUniform1i(texMapLocation, tex[0]);
 
-
+	bmpread_free(&bitmap1);
+	bmpread_free(&bitmap2);
+	bmpread_free(&bitmap3);
+	bmpread_free(&bitmap4);
+	bmpread_free(&bitmap5);
+	bmpread_free(&bitmap6);
 
 }
 // keyboard handler
@@ -894,11 +905,26 @@ void keyboard( unsigned char key, int x, int y )
 			display();
 			break;
 
+		case 't':
+			fogParameter = (fogParameter+1) % 3;
+			display();
+			break;
+
+		case 'v':
+			fogParameter = (fogParameter+1) % 3;
+			display();
+			break;
+
+		case 'k':
+			fogParameter = (fogParameter+1) % 3;
+			display();
+			break;
+
 		case 033:
 			exit( EXIT_SUCCESS );
 			break;
+
 		default:
-			//flag = 0;
 			break;
     }
 

@@ -8,7 +8,7 @@ in vec3 T;
 
 out vec4 fColor;
 
-uniform  int enableTreeColor;
+uniform  int textureMode;
 uniform  int enableFogWithSpecialIncrement;
 uniform sampler2D texture;
 uniform samplerCube texMap;
@@ -22,15 +22,18 @@ void main()
 	//vec4 texColor = textureCube(texMap, R);
 
 
-	if(enableTreeColor == 1)
+	if(textureMode == 1)
 	{
 		fColor = interpolatedColor;
 	}
-	else if(enableTreeColor == 2)
+	else if(textureMode == 2)
+	{
+		fColor = textureCube(texMap, R);
+	}
+	else if(textureMode == 3)
 	{
 		vec4 refractColor = textureCube(texMap, T); // look up texture map using T
 		fColor = mix(refractColor, vec4(1.0, 1.0, 1.0, 1.0), 0.3); 
-		//fColor = textureCube(texMap, R);
 	}
 	else
 	{
