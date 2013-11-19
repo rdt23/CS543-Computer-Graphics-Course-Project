@@ -4,6 +4,7 @@ in  vec4  interpolatedColor;
 in  vec2 texCoord;
 in float zValue;
 in vec3 R;
+in vec3 T;
 
 out vec4 fColor;
 
@@ -27,7 +28,9 @@ void main()
 	}
 	else if(enableTreeColor == 2)
 	{
-		fColor = textureCube(texMap, R);
+		vec4 refractColor = textureCube(texMap, T); // look up texture map using T
+		fColor = mix(refractColor, vec4(1.0, 1.0, 1.0, 1.0), 0.3); 
+		//fColor = textureCube(texMap, R);
 	}
 	else
 	{

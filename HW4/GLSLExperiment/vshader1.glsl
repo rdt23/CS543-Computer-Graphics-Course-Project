@@ -10,6 +10,7 @@ out vec2 texCoord;
 out vec4 interpolatedColor;
 out float zValue;
 out vec3 R;
+out vec3 T;
 
 uniform mat4 Projection;
 uniform mat4 model_matrix;
@@ -26,6 +27,8 @@ void main()
 	vec3 eyePos = vPosition.xyz; 
 	vec4 NN = model_matrix * Normal; 
 	vec3 N = normalize(NN.xyz); 
+
 	R = reflect(eyePos.xyz, N); 
-	
+
+	T = refract(eyePos.xyz, N, 1.47); 
 }

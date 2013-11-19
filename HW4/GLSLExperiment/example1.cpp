@@ -144,12 +144,6 @@ int fogParameter = 0;// [used in shader] - 0:diable; 1:enabled with liner increm
 int enableShadows = 0;
 float light[3] = {70,300,-200}; // location of light
 
-/*********************************************/
-
-point4 normals[6];
-vec4 normal;
-
-/*********************************************/
 void setAndLoadTexture( int textureIndex )
 {
 	if(!bmpread(textureFileName[textureIndex], 0, &bitmap))
@@ -435,7 +429,7 @@ void drawCar( void )
 	for(int i = 0; i < countOfFace[2]*3; i++)
 	{
 		carColorsBuf[i] = color4(1.0, 1.0, 0.0, 1.0 );
-		carNormalsBuf[i] = vec4(normalize(cross(carPointsBuf[i- i%3 + 1] - carPointsBuf[i- i%3 ], carPointsBuf[i- i%3  + 2] - carPointsBuf[i- i%3  + 1])), 1.0f);
+		carNormalsBuf[i] = vec4(normalize(cross(carPointsBuf[i- i%3] - carPointsBuf[i- i%3 + 1], carPointsBuf[i- i%3 + 2] - carPointsBuf[i- i%3 + 1])), 1.0f);
 
 	}
 
@@ -445,7 +439,7 @@ void drawCar( void )
 	m[3][1] = -1.0/light[1]; 
 	m[3][3] = 0;
 	
-	modelMat = modelMat *Angel::Translate(-20, 10, -0) * Angel::RotateY(0.0f) * Angel::RotateZ(0.0f);
+	modelMat = modelMat *Angel::Translate(-20, 10, 20) * Angel::RotateY(0.0f) * Angel::RotateZ(0.0f);
 	modelMat = modelMat *Angel::Scale(2.7,2.7,2.7);
 	Angel::mat4 shadowsModelView = viewMat * Translate(0, 1, 0) * Translate(light[0], light[1], light[2]) * m * Translate(-light[0], -light[1], -light[2]) * modelMat;
 	modelMat = viewMat * modelMat;
@@ -467,7 +461,7 @@ void drawCar( void )
 
 	GLuint vNormal = glGetAttribLocation( program, "Normal" ); 
 	glEnableVertexAttribArray( vNormal );
-	glVertexAttribPointer( vNormal, 4, GL_FLOAT, GL_FALSE, 0, BUFFER_OFFSET(sizeof(carColorsBuf)) );
+	glVertexAttribPointer( vNormal, 4, GL_FLOAT, GL_FALSE, 0, BUFFER_OFFSET(sizeof(carNormalsBuf)) );
 
 	glEnable( GL_DEPTH_TEST );
     glDrawArrays( GL_TRIANGLES, 0, countOfFace[2]*3 );
@@ -478,10 +472,8 @@ void drawCar( void )
 		GLuint shadowModelMatrix = glGetUniformLocationARB(program, "model_matrix");
 		glUniformMatrix4fv( shadowModelMatrix, 1, GL_TRUE, shadowsModelView );
 
-		for(int i = 0; i < countOfFace[2]*3; i++)
-		{
-			carColorsBuf[i] = color4(0.0, 0.0, 0.0, 1.0); 
-		}
+		enableTreeColor = glGetUniformLocation(program, "enableTreeColor");
+		glUniform1i( enableTreeColor, 1);
 
 		glBufferData( GL_ARRAY_BUFFER, sizeof(carPointsBuf) + sizeof(carColorsBuf), NULL, GL_STATIC_DRAW );
 		glBufferSubData( GL_ARRAY_BUFFER, 0, sizeof(carPointsBuf), carPointsBuf );
