@@ -3,21 +3,31 @@
 in  vec4  interpolatedColor;
 in  vec2 texCoord;
 in float zValue;
+in vec3 R;
 
 out vec4 fColor;
 
 uniform  int enableTreeColor;
 uniform  int enableFogWithSpecialIncrement;
 uniform sampler2D texture;
+uniform samplerCube texMap;
 
 void main() 
 {
 	float factForFog = 1.0f;
 	vec4 fogColor = vec4(1.0, 1.0, 1.0, 1.0);
 
+	// for reflection use
+	//vec4 texColor = textureCube(texMap, R);
+
+
 	if(enableTreeColor == 1)
 	{
 		fColor = interpolatedColor;
+	}
+	else if(enableTreeColor == 2)
+	{
+		fColor = textureCube(texMap, R);
 	}
 	else
 	{

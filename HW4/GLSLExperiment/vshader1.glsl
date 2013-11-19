@@ -3,10 +3,13 @@
 in  vec4 vPosition;
 in  vec2 vTexCoord;
 in  vec4 vColor;
+in  vec4 eyeMatrix;
+in  vec4 Normal;
 
 out vec2 texCoord;
 out vec4 interpolatedColor;
 out float zValue;
+out vec3 R;
 
 uniform mat4 Projection;
 uniform mat4 model_matrix;
@@ -19,14 +22,10 @@ void main()
 	interpolatedColor = vColor;
 	zValue = gl_Position.z;
 
-	/*
-	vec4 eyePos = eyeMatrix; 
-	// calculate view vector V
-	vec4 NN = ModelView*Normal; 
-	// transform normal
-	vec3 N =normalize(NN.xyz); 
-	// normalize normal
+	
+	vec3 eyePos = vPosition.xyz; 
+	vec4 NN = model_matrix * Normal; 
+	vec3 N = normalize(NN.xyz); 
 	R = reflect(eyePos.xyz, N); 
-	// calculate reflection vector R
-	*/
+	
 }

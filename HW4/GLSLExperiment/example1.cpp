@@ -102,6 +102,7 @@ face3  face[10500];
 
 point4 carPointsBuf[32000];
 color4 carColorsBuf[32000];
+point4 carNormalsBuf[32000];
 
 point4 spherePointsBuf[1000];
 color4 sphereColorsBuf[1000];
@@ -109,7 +110,7 @@ point4 cylinderPointsBuf[200];
 color4 cylinderColorsBuf[200];
 point4 boxPointsBuf[36];
 color4 boxColorsBuf[36];
-
+point4 boxNormalsBuf[36];
 
 /* store current state for translation */
 point4 currentPoint;
@@ -220,6 +221,7 @@ void plyFileLoad(int fileIndex)
 	for(int j = 0; j < countOfVertex[fileIndex]; j++)
 	{	//read each vertex
 		fscanf(inStream,"%f %f %f", &z, &x, &y);
+		
 		if(j == 0)
 		{
 			xMax[fileIndex] = xMin[fileIndex] = x;
@@ -426,15 +428,16 @@ void drawCar( void )
 	for(int i = 0; i < countOfFace[2]*3; i++)
 	{
 		carColorsBuf[i] = color4(1.0, 1.0, 0.0, 1.0 );
+		carNormalsBuf[i] = normalize(cross(carPointsBuf[i/3 + 1] - carPointsBuf[i/3], carPointsBuf[i/3 + 2] - carPointsBuf[i/3 + 1]));
 	}
 
-	glPolygonMode( GL_FRONT_AND_BACK, GL_LINE );
+	glPolygonMode( GL_FRONT_AND_BACK, GL_FILL );
 	Angel::mat4 modelMat = Angel::identity();
 	mat4 m; // shadow projection matrix initially identity
 	m[3][1] = -1.0/light[1]; 
 	m[3][3] = 0;
 	
-	modelMat = modelMat *Angel::Translate(-20, 10, -20) * Angel::RotateY(90.0f) * Angel::RotateZ(90.0f);
+	modelMat = modelMat *Angel::Translate(-20, 10, 50) * Angel::RotateY(90.0f) * Angel::RotateZ(90.0f);
 	modelMat = modelMat *Angel::Scale(2.7,2.7,2.7);
 	Angel::mat4 shadowsModelView = viewMat * Translate(0, 1, 0) * Translate(light[0], light[1], light[2]) * m * Translate(-light[0], -light[1], -light[2]) * modelMat;
 	modelMat = viewMat * modelMat;
@@ -443,16 +446,20 @@ void drawCar( void )
 	GLuint modelMatrix = glGetUniformLocationARB(program, "model_matrix");
 	glUniformMatrix4fv( modelMatrix, 1, GL_TRUE, modelMat );
 
-	glBufferData( GL_ARRAY_BUFFER, sizeof(carPointsBuf) + sizeof(carColorsBuf), NULL, GL_STATIC_DRAW );
+	glBufferData( GL_ARRAY_BUFFER, sizeof(carPointsBuf) + sizeof(carNormalsBuf), NULL, GL_STATIC_DRAW );
 	glBufferSubData( GL_ARRAY_BUFFER, 0, sizeof(carPointsBuf), carPointsBuf );
-	glBufferSubData( GL_ARRAY_BUFFER, sizeof(carPointsBuf), sizeof(carColorsBuf), carColorsBuf );
+	glBufferSubData( GL_ARRAY_BUFFER, sizeof(carPointsBuf), sizeof(carNormalsBuf), carNormalsBuf );
 
 	GLint enableTreeColor = glGetUniformLocation(program, "enableTreeColor");
-    glUniform1i( enableTreeColor, 1);
+    glUniform1i( enableTreeColor, 2);
 
 	GLuint vColor = glGetAttribLocation( program, "vColor" ); 
 	glEnableVertexAttribArray( vColor );
 	glVertexAttribPointer( vColor, 4, GL_FLOAT, GL_FALSE, 0, BUFFER_OFFSET(sizeof(carColorsBuf)) );
+
+	GLuint vNormal = glGetAttribLocation( program, "Normal" ); 
+	glEnableVertexAttribArray( vNormal );
+	glVertexAttribPointer( vNormal, 4, GL_FLOAT, GL_FALSE, 0, BUFFER_OFFSET(sizeof(carColorsBuf)) );
 
 	glEnable( GL_DEPTH_TEST );
     glDrawArrays( GL_TRIANGLES, 0, countOfFace[2]*3 );
@@ -482,16 +489,16 @@ void drawBox( void )
 {
 	for(int i = 0; i < countOfFace[3]*3; i++)
 	{
-		boxColorsBuf[i] = color4(0.0, 1.0, 1.0, 1.0 );
+		boxNormalsBuf[i] = normalize(cross(boxPointsBuf[i/3 + 1] - boxPointsBuf[i/3], boxPointsBuf[i/3 + 2] - boxPointsBuf[i/3 + 1]));
 	}
 
-	glPolygonMode( GL_FRONT_AND_BACK, GL_LINE );
+	glPolygonMode( GL_FRONT_AND_BACK, GL_FILL );
 	Angel::mat4 modelMat = Angel::identity();
 	mat4 m; // shadow projection matrix initially identity
 	m[3][1] = -1.0/light[1]; 
 	m[3][3] = 0;
 	
-	modelMat = modelMat *Angel::Translate(-0, 15, 20) * Angel::RotateY(90.0f) * Angel::RotateZ(90.0f);
+	modelMat = modelMat *Angel::Translate(-0, 15, 20) * Angel::RotateY(0.0f) * Angel::RotateZ(0.0f);
 	modelMat = modelMat *Angel::Scale(7,7,7);
 	Angel::mat4 shadowsModelView = viewMat * Translate(0, 1, 0) * Translate(light[0], light[1], light[2]) * m * Translate(-light[0], -light[1], -light[2]) * modelMat;
 	modelMat = viewMat * modelMat;
@@ -500,16 +507,21 @@ void drawBox( void )
 	GLuint modelMatrix = glGetUniformLocationARB(program, "model_matrix");
 	glUniformMatrix4fv( modelMatrix, 1, GL_TRUE, modelMat );
 
-	glBufferData( GL_ARRAY_BUFFER, sizeof(boxPointsBuf) + sizeof(boxColorsBuf), NULL, GL_STATIC_DRAW );
+	glBufferData( GL_ARRAY_BUFFER, sizeof(boxPointsBuf) + sizeof(boxNormalsBuf), NULL, GL_STATIC_DRAW );
 	glBufferSubData( GL_ARRAY_BUFFER, 0, sizeof(boxPointsBuf), boxPointsBuf );
-	glBufferSubData( GL_ARRAY_BUFFER, sizeof(boxPointsBuf), sizeof(boxColorsBuf), boxColorsBuf );
+	glBufferSubData( GL_ARRAY_BUFFER, sizeof(boxPointsBuf), sizeof(boxNormalsBuf), boxNormalsBuf );
 
 	GLint enableTreeColor = glGetUniformLocation(program, "enableTreeColor");
-    glUniform1i( enableTreeColor, 1);
+    glUniform1i( enableTreeColor, 2);
 
+	/*
 	GLuint vColor = glGetAttribLocation( program, "vColor" ); 
 	glEnableVertexAttribArray( vColor );
 	glVertexAttribPointer( vColor, 4, GL_FLOAT, GL_FALSE, 0, BUFFER_OFFSET(sizeof(boxColorsBuf)) );
+	*/
+	GLuint vNormal = glGetAttribLocation( program, "Normal" ); 
+	glEnableVertexAttribArray( vNormal );
+	glVertexAttribPointer( vNormal, 4, GL_FLOAT, GL_FALSE, 0, BUFFER_OFFSET(sizeof(boxNormalsBuf)) );
 
 	glEnable( GL_DEPTH_TEST );
     glDrawArrays( GL_TRIANGLES, 0, countOfFace[3]*3 );
@@ -597,6 +609,10 @@ void init( void )
     GLuint vTexCoord = glGetAttribLocation( program, "vTexCoord" ); 
     glEnableVertexAttribArray( vTexCoord );
     glVertexAttribPointer( vTexCoord, 2, GL_FLOAT, GL_FALSE, 0, BUFFER_OFFSET(sizeof(pointsGround)) );
+
+	GLuint eyeMatrix = glGetAttribLocation( program, "eyeMatrix" ); 
+	glEnableVertexAttribArray( eyeMatrix );
+	glVertexAttribPointer( eyeMatrix, 4, GL_FLOAT, GL_FALSE, 0, BUFFER_OFFSET(sizeof(eyeMatrix)) );
 
 	// sets the default color to clear screen
     glClearColor( 1.0, 1.0, 1.0, 1.0 ); // white background
@@ -844,9 +860,10 @@ void cubeMapInit( void )
 	glTexImage2D(GL_TEXTURE_CUBE_MAP_NEGATIVE_X ,0, GL_RGB, bitmap2.width, bitmap2.height, 0, GL_RGB, GL_UNSIGNED_BYTE, bitmap2.rgb_data);
 	glTexImage2D(GL_TEXTURE_CUBE_MAP_POSITIVE_Y ,0, GL_RGB, bitmap3.width, bitmap3.height, 0, GL_RGB, GL_UNSIGNED_BYTE, bitmap3.rgb_data);
 	glTexImage2D(GL_TEXTURE_CUBE_MAP_NEGATIVE_Y ,0, GL_RGB, bitmap4.width, bitmap4.height, 0, GL_RGB, GL_UNSIGNED_BYTE, bitmap4.rgb_data);
-	glTexImage2D(GL_TEXTURE_CUBE_MAP_POSITIVE_Z ,0, GL_RGB, bitmap5.width, bitmap5.height, 0, GL_RGB, GL_UNSIGNED_BYTE, bitmap5.rgb_data);
-	glTexImage2D(GL_TEXTURE_CUBE_MAP_NEGATIVE_Z ,0, GL_RGB, bitmap6.width, bitmap6.height, 0, GL_RGB, GL_UNSIGNED_BYTE, bitmap6.rgb_data);
+	glTexImage2D(GL_TEXTURE_CUBE_MAP_NEGATIVE_Z ,0, GL_RGB, bitmap5.width, bitmap5.height, 0, GL_RGB, GL_UNSIGNED_BYTE, bitmap5.rgb_data);
+	glTexImage2D(GL_TEXTURE_CUBE_MAP_POSITIVE_Z ,0, GL_RGB, bitmap6.width, bitmap6.height, 0, GL_RGB, GL_UNSIGNED_BYTE, bitmap6.rgb_data);
 
+	glTexParameteri(GL_TEXTURE_CUBE_MAP,GL_TEXTURE_MIN_FILTER,GL_NEAREST);
 	glTexParameteri(GL_TEXTURE_CUBE_MAP,GL_TEXTURE_MAG_FILTER,GL_NEAREST);
 
 	texMapLocation = glGetUniformLocation(program, "texMap"); 
@@ -902,7 +919,6 @@ int main( int argc, char **argv )
 	   so that they will be at the same scale */
 	normalize();
 	/* initialize random seed: */
-	srand (time(NULL));
 	/* initial current variables */
 	currentPoint.w = 1.0f;
 
