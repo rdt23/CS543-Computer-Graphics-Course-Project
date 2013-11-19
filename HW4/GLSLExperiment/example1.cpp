@@ -28,6 +28,7 @@ void drawCar( void );
 void drawBox( void );
 void setAndLoadTexture( int );
 void cubeMapInit( void );
+void setGLPolygonMode( int );
 
 typedef Angel::vec4  color4;
 typedef Angel::vec4  point4;
@@ -42,9 +43,6 @@ typedef std::complex<float>  Complex;
 inline float Random() { return float(rand())/RAND_MAX; }
 
 GLuint Projection;
-
-/* default data*/
-/* can enter other values via command line arguments */
 
 #define CENTERX -0.5
 #define CENTERY 0.5
@@ -147,6 +145,8 @@ mat4 viewMat = LookAt(eyeMatrix, vec4(0,0,0,1), vec4(0,1,0,0));
 int fogParameter = 0;// [used in shader] - 0:diable; 1:enabled with liner increment; 2:enabled with exponential increment
 int enableShadows = 0;
 float light[3] = {70,300,-200}; // location of light
+static int textureModeValue = 1;
+
 
 void setAndLoadTexture( int textureIndex )
 {
@@ -172,6 +172,17 @@ void setAndLoadTexture( int textureIndex )
     glUniform1i( glGetUniformLocation(program, "texture"), 0 );
     glBindTexture(GL_TEXTURE_2D, texture);
 
+}
+void setGLPolygonMode( int textureModeValue )	
+{
+	if(textureModeValue == 1)
+	{
+		glPolygonMode( GL_FRONT_AND_BACK, GL_FILL );
+	}
+	else
+	{
+		glPolygonMode( GL_FRONT_AND_BACK, GL_LINE );
+	}
 }
 //load info from ply file into arrays
 void plyFileLoad(int fileIndex)
@@ -362,7 +373,10 @@ void drawSphere( void )
 }
 void drawCylinder( void )
 {
-	glPolygonMode( GL_FRONT_AND_BACK, GL_LINE );
+	for(int i = 0; i < countOfFace[0]*3; i++)
+	{
+		cylinderNormalsBuf[i] = vec4(normalize(cross(cylinderPointsBuf[i- i%3 + 1] - cylinderPointsBuf[i- i%3 ], cylinderPointsBuf[i- i%3 + 2] - cylinderPointsBuf[i- i%3 + 1])), 1.0f);
+	}
 
 	point4 shadowPoint[2];
 	color4 shadowColor[2] = {color4(0,0,0,1),color4(0,0,0,1)};
@@ -391,16 +405,33 @@ void drawCylinder( void )
 	GLuint modelMatrix = glGetUniformLocationARB(program, "model_matrix");
 	glUniformMatrix4fv( modelMatrix, 1, GL_TRUE, modelMat );
 
-	glBufferData( GL_ARRAY_BUFFER, sizeof(cylinderPointsBuf) + sizeof(cylinderColorsBuf), NULL, GL_STATIC_DRAW );
-	glBufferSubData( GL_ARRAY_BUFFER, 0, sizeof(cylinderPointsBuf), cylinderPointsBuf );
-	glBufferSubData( GL_ARRAY_BUFFER, sizeof(cylinderPointsBuf), sizeof(cylinderColorsBuf), cylinderColorsBuf );
+	if(textureModeValue == 1)
+	{
+		glPolygonMode( GL_FRONT_AND_BACK, GL_LINE );
+		glBufferData( GL_ARRAY_BUFFER, sizeof(cylinderPointsBuf) + sizeof(cylinderColorsBuf), NULL, GL_STATIC_DRAW );
+		glBufferSubData( GL_ARRAY_BUFFER, 0, sizeof(cylinderPointsBuf), cylinderPointsBuf );
+		glBufferSubData( GL_ARRAY_BUFFER, sizeof(cylinderPointsBuf), sizeof(cylinderColorsBuf), cylinderColorsBuf );
+	}
+	else
+	{
+		glPolygonMode( GL_FRONT_AND_BACK, GL_FILL );
+		glBufferData( GL_ARRAY_BUFFER, sizeof(cylinderPointsBuf) + sizeof(cylinderNormalsBuf), NULL, GL_STATIC_DRAW );
+		glBufferSubData( GL_ARRAY_BUFFER, 0, sizeof(cylinderPointsBuf), cylinderPointsBuf );
+		glBufferSubData( GL_ARRAY_BUFFER, sizeof(cylinderPointsBuf), sizeof(cylinderNormalsBuf), cylinderNormalsBuf );
+	}
 
 	GLint textureMode = glGetUniformLocation(program, "textureMode");
-    glUniform1i( textureMode, 1);
+    glUniform1i( textureMode, textureModeValue);
 
 	GLuint vColor = glGetAttribLocation( program, "vColor" ); 
 	glEnableVertexAttribArray( vColor );
-	glVertexAttribPointer( vColor, 4, GL_FLOAT, GL_FALSE, 0, BUFFER_OFFSET(sizeof(cylinderPointsBuf)) );
+	glVertexAttribPointer( vColor, 4, GL_FLOAT, GL_FALSE, 0, BUFFER_OFFSET(sizeof(cylinderColorsBuf)) );
+	
+	GLuint vNormal = glGetAttribLocation( program, "Normal" ); 
+	glEnableVertexAttribArray( vNormal );
+	glVertexAttribPointer( vNormal, 4, GL_FLOAT, GL_FALSE, 0, BUFFER_OFFSET(sizeof(cylinderNormalsBuf)) );
+
+
 
 	glEnable( GL_DEPTH_TEST );
     glDrawArrays( GL_TRIANGLES, 0, countOfFace[0]*3 );
@@ -432,11 +463,12 @@ void drawCar( void )
 {
 	for(int i = 0; i < countOfFace[2]*3; i++)
 	{
-		carColorsBuf[i] = color4(1.0, 1.0, 0.0, 1.0 );
+		carColorsBuf[i] = color4(1.0, 0.0, 1.0, 1.0 );
 		carNormalsBuf[i] = vec4(normalize(cross(carPointsBuf[i- i%3] - carPointsBuf[i- i%3 + 1], carPointsBuf[i- i%3 + 2] - carPointsBuf[i- i%3 + 1])), 1.0f);
 	}
 
-	glPolygonMode( GL_FRONT_AND_BACK, GL_FILL );
+	//setGLPolygonMode(textureModeValue);
+
 	Angel::mat4 modelMat = Angel::identity();
 	mat4 m; // shadow projection matrix initially identity
 	m[3][1] = -1.0/light[1]; 
@@ -451,12 +483,23 @@ void drawCar( void )
 	GLuint modelMatrix = glGetUniformLocationARB(program, "model_matrix");
 	glUniformMatrix4fv( modelMatrix, 1, GL_TRUE, modelMat );
 
-	glBufferData( GL_ARRAY_BUFFER, sizeof(carPointsBuf) + sizeof(carNormalsBuf), NULL, GL_STATIC_DRAW );
-	glBufferSubData( GL_ARRAY_BUFFER, 0, sizeof(carPointsBuf), carPointsBuf );
-	glBufferSubData( GL_ARRAY_BUFFER, sizeof(carPointsBuf), sizeof(carNormalsBuf), carNormalsBuf );
+	if(textureModeValue == 1)
+	{
+		glPolygonMode( GL_FRONT_AND_BACK, GL_LINE );
+		glBufferData( GL_ARRAY_BUFFER, sizeof(carPointsBuf) + sizeof(carColorsBuf), NULL, GL_STATIC_DRAW );
+		glBufferSubData( GL_ARRAY_BUFFER, 0, sizeof(carPointsBuf), carPointsBuf );
+		glBufferSubData( GL_ARRAY_BUFFER, sizeof(carPointsBuf), sizeof(carColorsBuf), carColorsBuf );
+	}
+	else
+	{
+		glPolygonMode( GL_FRONT_AND_BACK, GL_FILL );
+		glBufferData( GL_ARRAY_BUFFER, sizeof(carPointsBuf) + sizeof(carNormalsBuf), NULL, GL_STATIC_DRAW );
+		glBufferSubData( GL_ARRAY_BUFFER, 0, sizeof(carPointsBuf), carPointsBuf );
+		glBufferSubData( GL_ARRAY_BUFFER, sizeof(carPointsBuf), sizeof(carNormalsBuf), carNormalsBuf );
+	}
 
 	GLint textureMode = glGetUniformLocation(program, "textureMode");
-    glUniform1i( textureMode, 2);
+	glUniform1i( textureMode, textureModeValue);
 
 	GLuint vColor = glGetAttribLocation( program, "vColor" ); 
 	glEnableVertexAttribArray( vColor );
@@ -495,10 +538,11 @@ void drawBox( void )
 {
 	for(int i = 0; i < countOfFace[3]*3; i++)
 	{
+		boxColorsBuf[i] = color4(1.0, 1.0, 0.0, 1.0 );
 		boxNormalsBuf[i] = vec4(normalize(cross(boxPointsBuf[i- i%3 + 1] - boxPointsBuf[i- i%3 ], boxPointsBuf[i- i%3 + 2] - boxPointsBuf[i- i%3 + 1])), 1.0f);
 	}
 
-	glPolygonMode( GL_FRONT_AND_BACK, GL_FILL );
+
 	Angel::mat4 modelMat = Angel::identity();
 	mat4 m; // shadow projection matrix initially identity
 	m[3][1] = -1.0/light[1]; 
@@ -513,12 +557,23 @@ void drawBox( void )
 	GLuint modelMatrix = glGetUniformLocationARB(program, "model_matrix");
 	glUniformMatrix4fv( modelMatrix, 1, GL_TRUE, modelMat );
 
-	glBufferData( GL_ARRAY_BUFFER, sizeof(boxPointsBuf) + sizeof(boxNormalsBuf), NULL, GL_STATIC_DRAW );
-	glBufferSubData( GL_ARRAY_BUFFER, 0, sizeof(boxPointsBuf), boxPointsBuf );
-	glBufferSubData( GL_ARRAY_BUFFER, sizeof(boxPointsBuf), sizeof(boxNormalsBuf), boxNormalsBuf );
+	if(textureModeValue == 1)
+	{
+		glPolygonMode( GL_FRONT_AND_BACK, GL_LINE );
+		glBufferData( GL_ARRAY_BUFFER, sizeof(boxPointsBuf) + sizeof(boxColorsBuf), NULL, GL_STATIC_DRAW );
+		glBufferSubData( GL_ARRAY_BUFFER, 0, sizeof(boxPointsBuf), boxPointsBuf );
+		glBufferSubData( GL_ARRAY_BUFFER, sizeof(boxPointsBuf), sizeof(boxColorsBuf), boxColorsBuf );
+	}
+	else
+	{
+		glPolygonMode( GL_FRONT_AND_BACK, GL_FILL );
+		glBufferData( GL_ARRAY_BUFFER, sizeof(boxPointsBuf) + sizeof(boxNormalsBuf), NULL, GL_STATIC_DRAW );
+		glBufferSubData( GL_ARRAY_BUFFER, 0, sizeof(boxPointsBuf), boxPointsBuf );
+		glBufferSubData( GL_ARRAY_BUFFER, sizeof(boxPointsBuf), sizeof(boxNormalsBuf), boxNormalsBuf );
+	}
 
 	GLint textureMode = glGetUniformLocation(program, "textureMode");
-    glUniform1i( textureMode, 3);
+    glUniform1i( textureMode, textureModeValue);
 
 	
 	GLuint vColor = glGetAttribLocation( program, "vColor" ); 
@@ -554,7 +609,6 @@ void drawBox( void )
 		glDisable( GL_DEPTH_TEST );
 	}
 }
-
 //extend the formula from L-systems file, and store it into a link list
 void doIteration(int index)
 {
@@ -586,8 +640,6 @@ void doIteration(int index)
 		}
 	}
 }
-//return the length of the above link list (test use only)
-
 void init( void )
 {	
 	//colorcube();
@@ -887,7 +939,7 @@ void cubeMapInit( void )
 void keyboard( unsigned char key, int x, int y )
 {
 	glClear( GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT );     // clear the window
-
+	//textureModeValue = 1;
     switch ( key ) 
 	{
 		case 'd':
@@ -906,12 +958,17 @@ void keyboard( unsigned char key, int x, int y )
 			break;
 
 		case 't':
-			fogParameter = (fogParameter+1) % 3;
+			textureModeValue = 2;
 			display();
 			break;
 
 		case 'v':
-			fogParameter = (fogParameter+1) % 3;
+			textureModeValue = 3;
+			display();
+			break;
+
+		case 'x':
+			textureModeValue = 1;
 			display();
 			break;
 
@@ -944,7 +1001,6 @@ int main( int argc, char **argv )
 	/* normalize the points for sphere and cylinder, 
 	   so that they will be at the same scale */
 	normalize();
-	/* initialize random seed: */
 	/* initial current variables */
 	currentPoint.w = 1.0f;
 
