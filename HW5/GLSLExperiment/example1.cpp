@@ -22,6 +22,7 @@ typedef Angel::vec4 color4;
 typedef std::complex<float>  Complex;
 
 inline float Random() { return float(rand())/RAND_MAX; }
+void display();
 
 GLuint Projection;
 
@@ -50,10 +51,10 @@ int m = M;
 bmpread_t bitmap;
 
 static  GLuint  texture = 0;
+static  GLint   effectMode = 0;
 //----------------------------------------------------------------------------
 
-void
-init( void )
+void init( void )
 {
 	printf("Loading usain_bolt.bmp\n");
 
@@ -104,15 +105,13 @@ init( void )
     // set up vertex arrays
     GLuint vPosition = glGetAttribLocation( program, "vPosition" );
     glEnableVertexAttribArray( vPosition );
-    glVertexAttribPointer( vPosition, 4, GL_FLOAT, GL_FALSE, 0,
-			   BUFFER_OFFSET(0) );
+    glVertexAttribPointer( vPosition, 4, GL_FLOAT, GL_FALSE, 0, BUFFER_OFFSET(0) );
 
     // Since our texture coordinates match our vertex positions, we
     //   can reuse the position data for our texture coordinates.
     GLuint vTexCoord = glGetAttribLocation( program, "vTexCoord" ); 
     glEnableVertexAttribArray( vTexCoord );
-    glVertexAttribPointer( vTexCoord, 4, GL_FLOAT, GL_FALSE, 0,
-			   BUFFER_OFFSET(0) );
+    glVertexAttribPointer( vTexCoord, 4, GL_FLOAT, GL_FALSE, 0, BUFFER_OFFSET(0) );
 
     Projection = glGetUniformLocation( program, "Projection" );
 
@@ -120,13 +119,14 @@ init( void )
     glUniform1i( glGetUniformLocation(program, "texture"), 0 );
     glBindTexture(GL_TEXTURE_2D, texture);
 
+	effectMode = glGetUniformLocation(program, "effectMode");
+
     glClearColor( 1.0, 1.0, 1.0, 1.0 );
 }
 
 //----------------------------------------------------------------------------
 
-void
-reshape( int width, int height )
+void reshape( int width, int height )
 {
     glViewport( 0, 0, width, height );
     mat4 projection = Ortho( 0.0, 1.0, 0.0, 1.0, -1.0, 1.0 );
@@ -136,21 +136,69 @@ reshape( int width, int height )
 
 //----------------------------------------------------------------------------
 
-void
-keyboard( unsigned char key, int x, int y )
+void keyboard( unsigned char key, int x, int y )
 {
-    switch( key ) {
-	case 033: // Escape Key
-	case 'q': case 'Q':
-	    exit( EXIT_SUCCESS );
-	    break;
+    switch( key ) 
+	{
+		case 'o':
+		case 'O':
+			glUniform1i( effectMode, 0);
+			display();
+			break;
+
+		case 'l':
+		case 'L':
+			glUniform1i( effectMode, 1);
+			display();
+			break;
+
+		case 'n':
+		case 'N':
+			glUniform1i( effectMode, 2);
+			display();
+			break;
+
+		case 'd':
+		case 'D':
+
+			break;
+		case 'e':
+		case 'E':
+
+			break;
+
+		case 't':
+		case 'T':
+
+			break;
+
+		case 'w':
+		case 'W':
+
+			break;
+
+		case 'p':
+		case 'P':
+
+			break;
+
+		case 's':
+		case 'S':
+
+			break;
+
+
+		case 033: // Escape Key
+		case 'q': 
+		case 'Q':
+			exit( EXIT_SUCCESS );
+			break;
     }
 }
 
 //----------------------------------------------------------------------------
 
-void
-display()
+void display()
 {
     glClear( GL_COLOR_BUFFER_BIT );
     glDrawArrays( GL_TRIANGLES, 0, 6 );
@@ -159,8 +207,7 @@ display()
 
 //----------------------------------------------------------------------------
 
-int
-main( int argc, char *argv[] )
+int main( int argc, char *argv[] )
 {
     glutInit( &argc, argv );
     glutInitDisplayMode( GLUT_DOUBLE | GLUT_RGB );
