@@ -19,8 +19,16 @@ vec3 TwirlTransformation( vec3 );
 vec3 RippleTransformation( vec3 );
 vec3 SphericalTransformation( vec3 );
 
+ivec2 ires;
+float Res, ResS, ResT;
+
 void main() 
 { 
+	ires = textureSize( texture, 0);
+	Res = float( ires.s );	// assume it’s a square texture image
+	ResS = float( ires.s );
+	ResT = float( ires.t );
+
 	vec3 color = vec3(texture( texture, texCoord ));
     fColor = vec4(router(color, effectMode), 1.0);
 
@@ -63,8 +71,6 @@ vec3 router(vec3 color, int effectMode)
 
 vec3 SphericalTransformation(vec3 color)
 {	
-	ivec2 ires = textureSize( texture, 0);
-	float Res = float( ires.s );	// assume it’s a square texture image
 	float rMax = Res/2.0;
 	float p = 1.8f;
 	vec2 center = vec2(Res/2.0,Res/2.0);
@@ -100,8 +106,6 @@ vec3 RippleTransformation(vec3 color)
 	float ax = 10.0f;
 	float ay = 15.0f;
 
-	ivec2 ires = textureSize( texture, 0);
-	float Res = float( ires.s );	// assume it’s a square texture image
 	vec2 st = Res * texCoord;
 
 	vec2 xy = vec2( st.x + ax * sin(2*PI*st.y/tx),	st.y + ay * sin(2*PI*st.x/ty)  );
@@ -115,9 +119,6 @@ vec3 TwirlTransformation(vec3 color)
 {
 	float uD = 45.0; 
 	float uR = 0.50;
-
-	ivec2 ires = textureSize( texture, 0);
-	float Res = float( ires.s );	// assume it’s a square texture image
 
 	vec2 st = texCoord;
 	float Radius = Res * uR;
@@ -138,10 +139,6 @@ vec3 TwirlTransformation(vec3 color)
 
 vec3 ToonRendering(vec3 color)
 {
-	ivec2 ires = textureSize( texture, 0);
-	float ResS = float( ires.s );
-	float ResT = float( ires.t );
-
 	vec2 stp0 = vec2(1.0/ResS,  0.0     ); //texel offsets
 	vec2 st0p = vec2(0.0 ,      1.0/ResT);
 	vec2 stpp = vec2(1.0/ResS,  1.0/ResT);
@@ -181,10 +178,6 @@ vec3 ToonRendering(vec3 color)
 } 
 vec3 EmbossingEffect(vec3 color)
 {
-	ivec2 ires = textureSize( texture, 0);
-	float ResS = float( ires.s );
-	float ResT = float( ires.t );
-
 	vec2 stp0 = vec2(1.0/ResS,  0.0     ); //texel offsets
 	vec2 stpp = vec2(1.0/ResS,  1.0/ResT);
 
@@ -215,10 +208,6 @@ vec3 EmbossingEffect(vec3 color)
 
 vec3 EdgeDetectionEffect(vec3 color)
 {
-	ivec2 ires = textureSize( texture, 0);
-	float ResS = float( ires.s );
-	float ResT = float( ires.t );
-
 	vec2 stp0 = vec2(1.0/ResS,  0.0     ); //texel offsets
 	vec2 st0p = vec2(0.0 ,      1.0/ResT);
 	vec2 stpp = vec2(1.0/ResS,  1.0/ResT);
