@@ -83,7 +83,8 @@ vec3 ToonRendering(vec3 color)
 
 	float mag = sqrt( h*h + v*v );
 
-	if( mag > 2.3 )
+	// if is not used here, evey logic goes into else block
+	if( mag > 3)
 	{
 		return vec3( 0.0, 0.0, 0.0);
 	}
