@@ -31,7 +31,7 @@ vec3 router(vec3 color, int effectMode)
 			return NegativeEffect(color);
 
 		case 3:
-			//color = vec3(LuminanceEffect(color));
+			//color = LuminanceEffect(color);
 			return EdgeDetectionEffect(color);
 
 		default:
@@ -46,9 +46,7 @@ vec3 EdgeDetectionEffect(vec3 color)
 	float ResS = float( ires.s );
 	float ResT = float( ires.t );
 
-	vec3  irgb = vec3(LuminanceEffect(color));//texture(texture, texCoord ).rgb;
-
-	vec2 stp0 = vec2(1.0/ResS,  0.0 ); //texel offsets
+	vec2 stp0 = vec2(1.0/ResS,  0.0     ); //texel offsets
 	vec2 st0p = vec2(0.0 ,      1.0/ResT);
 	vec2 stpp = vec2(1.0/ResS,  1.0/ResT);
 	vec2 stpm = vec2(1.0/ResS, -1.0/ResT);
@@ -69,7 +67,7 @@ vec3 EdgeDetectionEffect(vec3 color)
 
 	float mag = sqrt(h*h + v*v);
 	vec3 target = vec3(mag, mag, mag);
-	return mix(irgb, target, texCoord.y);
+	return mix(color, target, texCoord.y);
 }
 
 vec3 NegativeEffect(vec3 color)
