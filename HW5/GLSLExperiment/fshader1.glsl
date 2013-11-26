@@ -6,6 +6,7 @@ out vec4 fColor;
 uniform sampler2D texture;
 uniform  int effectMode;
 
+const vec3 LUMCOEFFS = vec3(0.2125, 0.7154, 0.0721);
 vec3 router( vec3 , int );
 vec3 LuminanceEffect( vec3 );
 vec3 NegativeEffect( vec3 );
@@ -57,8 +58,6 @@ vec3 router(vec3 color, int effectMode)
 
 vec3 ToonRendering(vec3 color)
 {
-
-	const vec3 LUMCOEFFS = vec3(0.2125, 0.7154, 0.0721);
 	ivec2 ires = textureSize( texture, 0);
 	float ResS = float( ires.s );
 	float ResT = float( ires.t );
@@ -90,7 +89,8 @@ vec3 ToonRendering(vec3 color)
 	}
 	else
 	{
-		vec3 uQuantize = vec3(3.3, 3.3, 3.3);
+		//vec3 uQuantize = vec3(3.3, 3.3, 3.3);
+		float uQuantize = 6.0;
 		color.rgb *= 	uQuantize;
 		color.rgb += vec3( 0.5, 0.5, 0.5 );
 		ivec3 irgb = ivec3( color.rgb );
@@ -135,7 +135,6 @@ vec3 EmbossingEffect(vec3 color)
 
 vec3 EdgeDetectionEffect(vec3 color)
 {
-	const vec3 LUMCOEFFS = vec3(0.2125, 0.7154, 0.0721);
 	ivec2 ires = textureSize( texture, 0);
 	float ResS = float( ires.s );
 	float ResT = float( ires.t );
