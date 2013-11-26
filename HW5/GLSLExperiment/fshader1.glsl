@@ -6,24 +6,24 @@ out vec4 fColor;
 uniform sampler2D texture;
 uniform  int effectMode;
 
-vec4 router( vec3 , int );
-vec4 LuminanceEffect( vec3 );
-vec4 NegativeEffect( vec3 );
-vec4 EdgeDetectionEffect( vec3 );
+vec3 router( vec3 , int );
+vec3 LuminanceEffect( vec3 );
+vec3 NegativeEffect( vec3 );
+vec3 EdgeDetectionEffect( vec3 );
 
 void main() 
 { 
 	vec3 color = vec3(texture( texture, texCoord ));
-    fColor = router(color, effectMode);
+    fColor = vec4(router(color, effectMode), 1.0);
 
 }
 
-vec4 router(vec3 color, int effectMode)
+vec3 router(vec3 color, int effectMode)
 {
 	switch(effectMode)
 	{
 		case 0:
-			return vec4(color, 1.0);
+			return color;
 		case 1:
 			return LuminanceEffect(color);
 		
@@ -35,16 +35,17 @@ vec4 router(vec3 color, int effectMode)
 			return EdgeDetectionEffect(color);
 
 		default:
-			return vec4(color, 1.0);
+			return color;
 	}
 }
 
-vec4 EdgeDetectionEffect(vec3 color)
+vec3 EdgeDetectionEffect(vec3 color)
 {
 	const vec3 LUMCOEFFS = vec3(0.2125, 0.7154, 0.0721);
 	ivec2 ires = textureSize( texture, 0);
 	float ResS = float( ires.s );
 	float ResT = float( ires.t );
+
 	vec3  irgb = vec3(LuminanceEffect(color));//texture(texture, texCoord ).rgb;
 
 	vec2 stp0 = vec2(1.0/ResS,  0.0 ); //texel offsets
@@ -68,23 +69,23 @@ vec4 EdgeDetectionEffect(vec3 color)
 
 	float mag = sqrt(h*h + v*v);
 	vec3 target = vec3(mag, mag, mag);
-	return vec4( mix(irgb, target, texCoord.y), 1.0);
+	return mix(irgb, target, texCoord.y);
 }
 
-vec4 NegativeEffect(vec3 color)
+vec3 NegativeEffect(vec3 color)
 {
-	return vec4( 1.0 - color.x, 1.0 - color.y, 1.0 - color.z, 1.0);
+	return vec3( 1.0 - color.x, 1.0 - color.y, 1.0 - color.z);
 }
 
-vec4 LuminanceEffect(vec3 color)
+vec3 LuminanceEffect(vec3 color)
 {
 	const vec3 LUMCOEFFS = vec3(0.2125, 0.7154, 0.0721);
 	float luminance = dot(color, LUMCOEFFS);
-	return vec4( luminance, luminance,luminance, 1.0);
+	return vec3( luminance, luminance,luminance);
 }
 
 /*
-vec4 EmbossingEffect()
+vec3 EmbossingEffect()
 {
 
 }
