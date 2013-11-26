@@ -62,39 +62,35 @@ vec3 router(vec3 color, int effectMode)
 }
 
 vec3 SphericalTransformation(vec3 color)
-{
-	/*
+{	
 	ivec2 ires = textureSize( texture, 0);
 	float Res = float( ires.s );	// assume it’s a square texture image
 	float rMax = Res/2.0;
 	float p = 1.8f;
 	vec2 center = vec2(Res/2.0,Res/2.0);
 
-	vec2 st = texCoord;
-	vec2 d = vec2(st.x - center.x, st.y - center.y);
+	vec2 st = Res * texCoord;
+	vec2 d  = vec2(st.x - center.x, st.y - center.y);
 	float r = sqrt(d.x*d.x + d.y*d.y);
-	float z = sqrt(rMax*rMax + r*r);
+	float z = sqrt(rMax*rMax - r*r);
 	
-	vec2 b = vec2((1-1/p)*asin());
+	vec2 b = vec2( (1-1/p)*asin(d.x/sqrt(d.x*d.x+z*z)), 
+				   (1-1/p)*asin(d.y/sqrt(d.y*d.y+z*z)));
 
-	float Radius = Res * uR;
-	vec2 xy = Res * st;				// pixel coordinates from texture coords
-	vec2 dxy = xy - Res/2.0;			// twirl center is (Res/2, Res/2)
-	
-	float r = sqrt( dxy.x * dxy.x + dxy.y * dxy.y );
+	vec2 xy;
 
-	float beta = atan( dxy.y, dxy.x) + radians(uD) * (Radius - r)/Radius;
-
-	vec2 xy1 = xy;
-	if(r <= Radius)
+	if(r <= rMax)
 	{
-		xy1 = Res/2.0 + r * vec2( cos(beta), sin(beta) );
+		xy = vec2(st.x-z * tan(b.x), st.y-z * tan(b.y));
 	}
-	st = xy1/Res;					// restore coordinates
+	else
+	{
+		xy = vec2(st.x,st.y);
+	}
+
+	st = xy/Res;					// restore coordinates
 	
 	return vec3(texture( texture, st ));
-	*/
-	return color;
 }
 
 vec3 RippleTransformation(vec3 color)
