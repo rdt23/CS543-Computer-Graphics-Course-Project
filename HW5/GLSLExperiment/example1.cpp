@@ -160,7 +160,8 @@ void keyboard( unsigned char key, int x, int y )
 
 		case 'd':
 		case 'D':
-
+			glUniform1i( effectMode, 3);
+			display();
 			break;
 		case 'e':
 		case 'E':
