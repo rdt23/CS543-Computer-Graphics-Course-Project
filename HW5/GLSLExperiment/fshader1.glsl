@@ -130,7 +130,7 @@ vec3 EmbossingEffect(vec3 color)
 	vec3 grayVersion = vec3(gray, gray, gray);
 	vec3 colorVersion = vec3(gray*c00);
 
-	return mix(grayVersion, colorVersion, texCoord.y-0.77);
+	return mix(grayVersion, colorVersion, -0.33);
 }
 
 vec3 EdgeDetectionEffect(vec3 color)
