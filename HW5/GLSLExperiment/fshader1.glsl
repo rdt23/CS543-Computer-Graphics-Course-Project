@@ -16,6 +16,8 @@ vec3 EdgeDetectionEffect( vec3 );
 vec3 EmbossingEffect( vec3 );
 vec3 ToonRendering( vec3 );
 vec3 TwirlTransformation( vec3 );
+vec3 RippleTransformation( vec3 );
+vec3 SphericalTransformation( vec3 );
 
 void main() 
 { 
@@ -49,14 +51,68 @@ vec3 router(vec3 color, int effectMode)
 			return TwirlTransformation(color);
 		
 		case 7:
-			return NegativeEffect(color);
+			return RippleTransformation(color);
 		
 		case 8:
-			return NegativeEffect(color);
+			return SphericalTransformation(color);
 
 		default:
 			return color;
 	}
+}
+
+vec3 SphericalTransformation(vec3 color)
+{
+	/*
+	ivec2 ires = textureSize( texture, 0);
+	float Res = float( ires.s );	// assume it’s a square texture image
+	float rMax = Res/2.0;
+	float p = 1.8f;
+	vec2 center = vec2(Res/2.0,Res/2.0);
+
+	vec2 st = texCoord;
+	vec2 d = vec2(st.x - center.x, st.y - center.y);
+	float r = sqrt(d.x*d.x + d.y*d.y);
+	float z = sqrt(rMax*rMax + r*r);
+	
+	vec2 b = vec2((1-1/p)*asin());
+
+	float Radius = Res * uR;
+	vec2 xy = Res * st;				// pixel coordinates from texture coords
+	vec2 dxy = xy - Res/2.0;			// twirl center is (Res/2, Res/2)
+	
+	float r = sqrt( dxy.x * dxy.x + dxy.y * dxy.y );
+
+	float beta = atan( dxy.y, dxy.x) + radians(uD) * (Radius - r)/Radius;
+
+	vec2 xy1 = xy;
+	if(r <= Radius)
+	{
+		xy1 = Res/2.0 + r * vec2( cos(beta), sin(beta) );
+	}
+	st = xy1/Res;					// restore coordinates
+	
+	return vec3(texture( texture, st ));
+	*/
+	return color;
+}
+
+vec3 RippleTransformation(vec3 color)
+{
+	float tx = 120.0f;
+	float ty = 250.0f;
+	float ax = 10.0f;
+	float ay = 15.0f;
+
+	ivec2 ires = textureSize( texture, 0);
+	float Res = float( ires.s );	// assume it’s a square texture image
+	vec2 st = Res * texCoord;
+
+	vec2 xy = vec2( st.x + ax * sin(2*PI*st.y/tx),	st.y + ay * sin(2*PI*st.x/ty)  );
+
+	st = xy/Res;
+
+	return vec3(texture( texture, st ));
 }
 
 vec3 TwirlTransformation(vec3 color)
@@ -214,9 +270,3 @@ vec3 LuminanceEffect(vec3 color)
 	return vec3( luminance, luminance,luminance);
 }
 
-
-/*
-TwirlTransformation
-RippleTransformation
-SphericalTransformation
-*/
