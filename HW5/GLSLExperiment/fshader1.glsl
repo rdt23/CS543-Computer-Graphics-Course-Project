@@ -11,6 +11,7 @@ vec3 LuminanceEffect( vec3 );
 vec3 NegativeEffect( vec3 );
 vec3 EdgeDetectionEffect( vec3 );
 vec3 EmbossingEffect( vec3 );
+vec3 ToonRendering( vec3 );
 
 void main() 
 { 
@@ -35,11 +36,10 @@ vec3 router(vec3 color, int effectMode)
 			return EdgeDetectionEffect(color);
 
 		case 4:
-			//color = LuminanceEffect(color);
 			return EmbossingEffect(color);
 
 		case 5:
-			return NegativeEffect(color);
+			return ToonRendering(color);
 		
 		case 6:
 			return NegativeEffect(color);
@@ -55,6 +55,49 @@ vec3 router(vec3 color, int effectMode)
 	}
 }
 
+vec3 ToonRendering(vec3 color)
+{
+
+	const vec3 LUMCOEFFS = vec3(0.2125, 0.7154, 0.0721);
+	ivec2 ires = textureSize( texture, 0);
+	float ResS = float( ires.s );
+	float ResT = float( ires.t );
+
+	vec2 stp0 = vec2(1.0/ResS,  0.0     ); //texel offsets
+	vec2 st0p = vec2(0.0 ,      1.0/ResT);
+	vec2 stpp = vec2(1.0/ResS,  1.0/ResT);
+	vec2 stpm = vec2(1.0/ResS, -1.0/ResT);
+	
+	float i00   = dot( texture( texture, texCoord      ).rgb , LUMCOEFFS);
+	float im1m1 = dot( texture( texture, texCoord-stpp ).rgb , LUMCOEFFS);
+	float ip1p1 = dot( texture( texture, texCoord+stpp ).rgb , LUMCOEFFS);
+	float im1p1 = dot( texture( texture, texCoord-stpm ).rgb , LUMCOEFFS);
+	float ip1m1 = dot( texture( texture, texCoord+stpm ).rgb , LUMCOEFFS);
+	float im10  = dot( texture( texture, texCoord-stp0 ).rgb , LUMCOEFFS);
+	float ip10  = dot( texture( texture, texCoord+stp0 ).rgb , LUMCOEFFS);
+	float i0m1  = dot( texture( texture, texCoord-st0p ).rgb , LUMCOEFFS);
+	float i0p1  = dot( texture( texture, texCoord+st0p ).rgb , LUMCOEFFS);
+	
+	float h = -1.0 * im1p1 - 2.0 * i0p1 - 1.0 * ip1p1 + 1.0 * im1m1 + 2.0 * i0m1 + 1.0 * ip1m1;
+	float v = -1.0 * im1m1 - 2.0 * im10 - 1.0 * im1p1 + 1.0 * ip1m1 + 2.0 * ip10 + 1.0 * ip1p1;
+
+	float mag = sqrt( h*h + v*v );
+
+	if( mag > 2.3 )
+	{
+		return vec3( 0.0, 0.0, 0.0);
+	}
+	else
+	{
+		vec3 uQuantize = vec3(1.0, 1.0, 1.0);
+		color.rgb *= 	uQuantize;
+		color.rgb += vec3( 0.5, 0.5, 0.5 );
+		ivec3 irgb = ivec3( color.rgb );
+		color.rgb = vec3( irgb ) / uQuantize;
+		return color;
+	}
+
+} 
 vec3 EmbossingEffect(vec3 color)
 {
 	ivec2 ires = textureSize( texture, 0);
@@ -145,7 +188,6 @@ vec3 LuminanceEffect(vec3 color)
 
 
 /*
-Embossing effect
 ToonRendering
 TwirlTransformation
 RippleTransformation
