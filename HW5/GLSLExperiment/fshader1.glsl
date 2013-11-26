@@ -7,12 +7,15 @@ uniform sampler2D texture;
 uniform  int effectMode;
 
 const vec3 LUMCOEFFS = vec3(0.2125, 0.7154, 0.0721);
+const float PI = 3.14159265;
+
 vec3 router( vec3 , int );
 vec3 LuminanceEffect( vec3 );
 vec3 NegativeEffect( vec3 );
 vec3 EdgeDetectionEffect( vec3 );
 vec3 EmbossingEffect( vec3 );
 vec3 ToonRendering( vec3 );
+vec3 TwirlTransformation( vec3 );
 
 void main() 
 { 
@@ -43,7 +46,7 @@ vec3 router(vec3 color, int effectMode)
 			return ToonRendering(color);
 		
 		case 6:
-			return NegativeEffect(color);
+			return TwirlTransformation(color);
 		
 		case 7:
 			return NegativeEffect(color);
@@ -54,6 +57,31 @@ vec3 router(vec3 color, int effectMode)
 		default:
 			return color;
 	}
+}
+
+vec3 TwirlTransformation(vec3 color)
+{
+	float uD = 45.0; 
+	float uR = 0.50;
+
+	ivec2 ires = textureSize( texture, 0);
+	float Res = float( ires.s );	// assume it’s a square texture image
+
+	vec2 st = texCoord;
+	float Radius = Res * uR;
+	vec2 xy = Res * st;				// pixel coordinates from texture coords
+	vec2 dxy = xy - Res/2.0;			// twirl center is (Res/2, Res/2)
+	float r = sqrt( dxy.x * dxy.x + dxy.y * dxy.y );
+	float beta = atan( dxy.y, dxy.x) + radians(uD) * (Radius - r)/Radius;
+
+	vec2 xy1 = xy;
+	if(r <= Radius)
+	{
+		xy1 = Res/2.0 + r * vec2( cos(beta), sin(beta) );
+	}
+	st = xy1/Res;					// restore coordinates
+
+	return vec3(texture( texture, st ));
 }
 
 vec3 ToonRendering(vec3 color)
@@ -188,7 +216,6 @@ vec3 LuminanceEffect(vec3 color)
 
 
 /*
-ToonRendering
 TwirlTransformation
 RippleTransformation
 SphericalTransformation
