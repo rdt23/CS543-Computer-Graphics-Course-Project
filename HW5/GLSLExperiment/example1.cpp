@@ -165,27 +165,32 @@ void keyboard( unsigned char key, int x, int y )
 			break;
 		case 'e':
 		case 'E':
-
+			glUniform1i( effectMode, 4);
+			display();
 			break;
 
 		case 't':
 		case 'T':
-
+			glUniform1i( effectMode, 5);
+			display();
 			break;
 
 		case 'w':
 		case 'W':
-
+			glUniform1i( effectMode, 6);
+			display();
 			break;
 
 		case 'p':
 		case 'P':
-
+			glUniform1i( effectMode, 7);
+			display();
 			break;
 
 		case 's':
 		case 'S':
-
+			glUniform1i( effectMode, 8);
+			display();
 			break;
 
 
