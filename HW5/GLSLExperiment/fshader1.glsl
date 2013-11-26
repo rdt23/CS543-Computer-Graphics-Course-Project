@@ -45,7 +45,7 @@ vec4 EdgeDetectionEffect(vec3 color)
 	ivec2 ires = textureSize( texture, 0);
 	float ResS = float( ires.s );
 	float ResT = float( ires.t );
-	vec3  irgb = texture(texture, texCoord ).rgb;
+	vec3  irgb = vec3(LuminanceEffect(color));//texture(texture, texCoord ).rgb;
 
 	vec2 stp0 = vec2(1.0/ResS,  0.0 ); //texel offsets
 	vec2 st0p = vec2(0.0 ,      1.0/ResT);
@@ -83,9 +83,13 @@ vec4 LuminanceEffect(vec3 color)
 	return vec4( luminance, luminance,luminance, 1.0);
 }
 
+/*
+vec4 EmbossingEffect()
+{
 
+}
 
-
+*/
 
 /*
 Embossing effect
