@@ -84,13 +84,13 @@ vec3 ToonRendering(vec3 color)
 	float mag = sqrt( h*h + v*v );
 
 	// if is not used here, evey logic goes into else block
-	if( mag > 3)
+	if( mag > 5.0)
 	{
 		return vec3( 0.0, 0.0, 0.0);
 	}
 	else
 	{
-		vec3 uQuantize = vec3(1.0, 1.0, 1.0);
+		vec3 uQuantize = vec3(3.3, 3.3, 3.3);
 		color.rgb *= 	uQuantize;
 		color.rgb += vec3( 0.5, 0.5, 0.5 );
 		ivec3 irgb = ivec3( color.rgb );
