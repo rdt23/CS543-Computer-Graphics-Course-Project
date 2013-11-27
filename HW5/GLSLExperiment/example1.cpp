@@ -52,6 +52,7 @@ bmpread_t bitmap;
 
 static  GLuint  texture = 0;
 static  GLint   effectMode = 0;
+static  int     effectModeValue = 0;
 //----------------------------------------------------------------------------
 
 void init( void )
@@ -142,54 +143,57 @@ void keyboard( unsigned char key, int x, int y )
 	{
 		case 'o':
 		case 'O':
-			glUniform1i( effectMode, 0);
+			effectModeValue = 0;
 			display();
 			break;
 
 		case 'l':
 		case 'L':
-			glUniform1i( effectMode, 1);
+			effectModeValue = 1;
 			display();
 			break;
 
 		case 'n':
 		case 'N':
-			glUniform1i( effectMode, 2);
+			effectModeValue = 2;
 			display();
 			break;
 
 		case 'd':
 		case 'D':
-			glUniform1i( effectMode, 3);
+			if(effectModeValue == 0)
+				effectModeValue = 13;
+			else
+				effectModeValue = 3;
 			display();
 			break;
 		case 'e':
 		case 'E':
-			glUniform1i( effectMode, 4);
+			effectModeValue = 4;
 			display();
 			break;
 
 		case 't':
 		case 'T':
-			glUniform1i( effectMode, 5);
+			effectModeValue = 5;
 			display();
 			break;
 
 		case 'w':
 		case 'W':
-			glUniform1i( effectMode, 6);
+			effectModeValue = 6;
 			display();
 			break;
 
 		case 'p':
 		case 'P':
-			glUniform1i( effectMode, 7);
+			effectModeValue = 7;
 			display();
 			break;
 
 		case 's':
 		case 'S':
-			glUniform1i( effectMode, 8);
+			effectModeValue = 8;
 			display();
 			break;
 
@@ -206,6 +210,7 @@ void keyboard( unsigned char key, int x, int y )
 
 void display()
 {
+	glUniform1i( effectMode, effectModeValue);
     glClear( GL_COLOR_BUFFER_BIT );
     glDrawArrays( GL_TRIANGLES, 0, 6 );
     glutSwapBuffers();
@@ -220,7 +225,7 @@ int main( int argc, char *argv[] )
     glutInitWindowSize( N, M );
     glutInitContextVersion( 3, 3 );
 //    glutInitContextProfile( GLUT_CORE_PROFILE );
-    glutCreateWindow( "Image Manipulation" );
+    glutCreateWindow( "Image Manipulation -- Hao" );
 
 	glewExperimental = GL_TRUE;
 

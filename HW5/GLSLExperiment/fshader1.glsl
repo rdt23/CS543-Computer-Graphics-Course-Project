@@ -21,6 +21,7 @@ vec3 SphericalTransformation( vec3 );
 
 ivec2 ires;
 float Res, ResS, ResT;
+float i00, im1m1, ip1p1, im1p1, ip1m1, im10, ip10, i0m1, i0p1; 
 
 void main() 
 { 
@@ -36,7 +37,7 @@ void main()
 
 vec3 router(vec3 color, int effectMode)
 {
-	switch(effectMode)
+	switch(effectMode%10)
 	{
 		case 0:
 			return color;
@@ -122,7 +123,7 @@ vec3 TwirlTransformation(vec3 color)
 
 	vec2 st = texCoord;
 	float Radius = Res * uR;
-	vec2 xy = Res * st;				// pixel coordinates from texture coords
+	vec2 xy = Res * st;					// pixel coordinates from texture coords
 	vec2 dxy = xy - Res/2.0;			// twirl center is (Res/2, Res/2)
 	float r = sqrt( dxy.x * dxy.x + dxy.y * dxy.y );
 	float beta = atan( dxy.y, dxy.x) + radians(uD) * (Radius - r)/Radius;
@@ -132,7 +133,7 @@ vec3 TwirlTransformation(vec3 color)
 	{
 		xy1 = Res/2.0 + r * vec2( cos(beta), sin(beta) );
 	}
-	st = xy1/Res;					// restore coordinates
+	st = xy1/Res;						// restore coordinates
 
 	return vec3(texture( texture, st ));
 }
@@ -144,15 +145,15 @@ vec3 ToonRendering(vec3 color)
 	vec2 stpp = vec2(1.0/ResS,  1.0/ResT);
 	vec2 stpm = vec2(1.0/ResS, -1.0/ResT);
 	
-	float i00   = dot( texture( texture, texCoord      ).rgb , LUMCOEFFS);
-	float im1m1 = dot( texture( texture, texCoord-stpp ).rgb , LUMCOEFFS);
-	float ip1p1 = dot( texture( texture, texCoord+stpp ).rgb , LUMCOEFFS);
-	float im1p1 = dot( texture( texture, texCoord-stpm ).rgb , LUMCOEFFS);
-	float ip1m1 = dot( texture( texture, texCoord+stpm ).rgb , LUMCOEFFS);
-	float im10  = dot( texture( texture, texCoord-stp0 ).rgb , LUMCOEFFS);
-	float ip10  = dot( texture( texture, texCoord+stp0 ).rgb , LUMCOEFFS);
-	float i0m1  = dot( texture( texture, texCoord-st0p ).rgb , LUMCOEFFS);
-	float i0p1  = dot( texture( texture, texCoord+st0p ).rgb , LUMCOEFFS);
+	i00   = dot( texture( texture, texCoord      ).rgb , LUMCOEFFS);
+	im1m1 = dot( texture( texture, texCoord-stpp ).rgb , LUMCOEFFS);
+	ip1p1 = dot( texture( texture, texCoord+stpp ).rgb , LUMCOEFFS);
+	im1p1 = dot( texture( texture, texCoord-stpm ).rgb , LUMCOEFFS);
+	ip1m1 = dot( texture( texture, texCoord+stpm ).rgb , LUMCOEFFS);
+	im10  = dot( texture( texture, texCoord-stp0 ).rgb , LUMCOEFFS);
+	ip10  = dot( texture( texture, texCoord+stp0 ).rgb , LUMCOEFFS);
+	i0m1  = dot( texture( texture, texCoord-st0p ).rgb , LUMCOEFFS);
+	i0p1  = dot( texture( texture, texCoord+st0p ).rgb , LUMCOEFFS);
 	
 	float h = -1.0 * im1p1 - 2.0 * i0p1 - 1.0 * ip1p1 + 1.0 * im1m1 + 2.0 * i0m1 + 1.0 * ip1m1;
 	float v = -1.0 * im1m1 - 2.0 * im10 - 1.0 * im1p1 + 1.0 * ip1m1 + 2.0 * ip10 + 1.0 * ip1p1;
@@ -212,29 +213,32 @@ vec3 EdgeDetectionEffect(vec3 color)
 	vec2 st0p = vec2(0.0 ,      1.0/ResT);
 	vec2 stpp = vec2(1.0/ResS,  1.0/ResT);
 	vec2 stpm = vec2(1.0/ResS, -1.0/ResT);
-	/*
-	float i00   = dot( texture( texture, texCoord      ).rgb , LUMCOEFFS);
-	float im1m1 = dot( texture( texture, texCoord-stpp ).rgb , LUMCOEFFS);
-	float ip1p1 = dot( texture( texture, texCoord+stpp ).rgb , LUMCOEFFS);
-	float im1p1 = dot( texture( texture, texCoord-stpm ).rgb , LUMCOEFFS);
-	float ip1m1 = dot( texture( texture, texCoord+stpm ).rgb , LUMCOEFFS);
-	float im10  = dot( texture( texture, texCoord-stp0 ).rgb , LUMCOEFFS);
-	float ip10  = dot( texture( texture, texCoord+stp0 ).rgb , LUMCOEFFS);
-	float i0m1  = dot( texture( texture, texCoord-st0p ).rgb , LUMCOEFFS);
-	float i0p1  = dot( texture( texture, texCoord+st0p ).rgb , LUMCOEFFS);
-	*/
-
-	color = LuminanceEffect(color);
-	float i00   = dot( LuminanceEffect(texture( texture, texCoord      ).rgb ), LUMCOEFFS);
-	float im1m1 = dot( LuminanceEffect(texture( texture, texCoord-stpp ).rgb ), LUMCOEFFS);
-	float ip1p1 = dot( LuminanceEffect(texture( texture, texCoord+stpp ).rgb ), LUMCOEFFS);
-	float im1p1 = dot( LuminanceEffect(texture( texture, texCoord-stpm ).rgb ), LUMCOEFFS);
-	float ip1m1 = dot( LuminanceEffect(texture( texture, texCoord+stpm ).rgb ), LUMCOEFFS);
-	float im10  = dot( LuminanceEffect(texture( texture, texCoord-stp0 ).rgb ), LUMCOEFFS);
-	float ip10  = dot( LuminanceEffect(texture( texture, texCoord+stp0 ).rgb ), LUMCOEFFS);
-	float i0m1  = dot( LuminanceEffect(texture( texture, texCoord-st0p ).rgb ), LUMCOEFFS);
-	float i0p1  = dot( LuminanceEffect(texture( texture, texCoord+st0p ).rgb ), LUMCOEFFS);
-
+	
+	if(effectMode > 10)
+	{
+		i00   = dot( texture( texture, texCoord      ).rgb , LUMCOEFFS);
+		im1m1 = dot( texture( texture, texCoord-stpp ).rgb , LUMCOEFFS);
+		ip1p1 = dot( texture( texture, texCoord+stpp ).rgb , LUMCOEFFS);
+		im1p1 = dot( texture( texture, texCoord-stpm ).rgb , LUMCOEFFS);
+		ip1m1 = dot( texture( texture, texCoord+stpm ).rgb , LUMCOEFFS);
+		im10  = dot( texture( texture, texCoord-stp0 ).rgb , LUMCOEFFS);
+		ip10  = dot( texture( texture, texCoord+stp0 ).rgb , LUMCOEFFS);
+		i0m1  = dot( texture( texture, texCoord-st0p ).rgb , LUMCOEFFS);
+		i0p1  = dot( texture( texture, texCoord+st0p ).rgb , LUMCOEFFS);
+	}
+	else
+	{
+		color = LuminanceEffect(color);
+		i00   = dot( LuminanceEffect(texture( texture, texCoord      ).rgb ), LUMCOEFFS);
+		im1m1 = dot( LuminanceEffect(texture( texture, texCoord-stpp ).rgb ), LUMCOEFFS);
+		ip1p1 = dot( LuminanceEffect(texture( texture, texCoord+stpp ).rgb ), LUMCOEFFS);
+		im1p1 = dot( LuminanceEffect(texture( texture, texCoord-stpm ).rgb ), LUMCOEFFS);
+		ip1m1 = dot( LuminanceEffect(texture( texture, texCoord+stpm ).rgb ), LUMCOEFFS);
+		im10  = dot( LuminanceEffect(texture( texture, texCoord-stp0 ).rgb ), LUMCOEFFS);
+		ip10  = dot( LuminanceEffect(texture( texture, texCoord+stp0 ).rgb ), LUMCOEFFS);
+		i0m1  = dot( LuminanceEffect(texture( texture, texCoord-st0p ).rgb ), LUMCOEFFS);
+		i0p1  = dot( LuminanceEffect(texture( texture, texCoord+st0p ).rgb ), LUMCOEFFS);
+	}
 	float h = -1.0 * im1p1 - 2.0 * i0p1 - 1.0 * ip1p1 + 1.0 * im1m1 + 2.0 * i0m1 + 1.0 * ip1m1;
 	float v = -1.0 * im1m1 - 2.0 * im10 - 1.0 * im1p1 + 1.0 * ip1m1 + 2.0 * ip10 + 1.0 * ip1p1;
 
