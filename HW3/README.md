@@ -1,19 +1,14 @@
 CS 543, Fall 2013 Homework 3: Hierarchical 3D Modeling of L-System Trees
 
-<table cellspacing="0" width="100%">
-  <tbody><tr>
+<table>
+<tr>
     <th align="left" width="15%" valign="top">Objective:</th>
     <td align="left" width="85%">In this assignment, you will learn how to generate a forest of trees using
       an iterated function system (IFS) called Lindenmayer Systems (a.k.a. L-Systems), and place those trees
       on a "ground plane." You shall also insert PLY models of a car and other PLY objects and place it on the ground plane
       to model a park.
-      This assignment consists of two parts: a "Preparation" part
-      and a "Submitted Stuff" part.
-			<p>
-      <b>NOTE: Please submit ONLY the work described below in the section "submitted stuff" by the due date (Oct 29, 2013). 
-        Do NOT submit the work you do in the "prep coding" section</b>
-
-  </p></td></tr>
+      This assignment consists of two parts: a "Preparation" part and a "Submitted Stuff" part.
+  </td></tr>
   <tr>
     <td><br></td>
   </tr>
@@ -143,7 +138,7 @@ Here is an example (in 2D) of some grammars and their corresponding trees. Can y
 use in this project? (The value of <i>n</i> is the number of iterations, and the angle specified is the
 rotation for the "+" and "-" characters.)
 <p>
-<img src="https://github.com/zhouhao/CS543-Computer-Graphics-Course-Project/blob/master/HW3/LsysExamples_sm.jpg">
+<img src="http://web.cs.wpi.edu/~emmanuel/courses/cs543/f13/homework/HW3/LsysExamples_sm.jpg">
 
 </p><p>
   </p></td></tr><tr>
@@ -311,31 +306,5 @@ and also <a href="http://www.cppreference.com/">CPP Reference</a>.
   <tr>
     <td><br></td>
   </tr>
-  <tr>
-    <th align="left" valign="top">Submitting your Work:</th>
-    <td align="left">
 
-Make sure to double-check that everything works before submitting.
-Submit all your executable and source files. 
-Put all your work files (Visual Studio solution, OpenGL program, shaders,
-executable and input files into a folder and zip it. Essentially,
-after your project is complete, just zip the project directory created
-by Visual Studio. Submit your project using web-based turnin. <br><br>
-
-
-Create documentation for your program and submit it along with the project inside the zip file. 
-Your documentation can be either a pure ASCII text or Microsoft Word file.
-The documentation does not have to be long. Briefly describe the structure of your program, 
-what each file turned in contains. Explain briefly what each module does and 
-tie in your filenames. Most importantly, give clear instructions on how
-to compile and run your program. <b>MAKE SURE IT RUNS</b> before submission. 
-Name your zip file according to the convention <i>FirstName_lastName_hw3.zip</i> <br> <br>
-
-
-
-     </td>
-  </tr>
-  <tr>
-    <td><br></td>
-  </tr>
-</tbody></table>
+</table>
