@@ -143,7 +143,7 @@ Here is an example (in 2D) of some grammars and their corresponding trees. Can y
 use in this project? (The value of <i>n</i> is the number of iterations, and the angle specified is the
 rotation for the "+" and "-" characters.)
 <p>
-<img src="LsysExamples_sm.jpg">
+<img src="https://github.com/zhouhao/CS543-Computer-Graphics-Course-Project/blob/master/HW3/LsysExamples_sm.jpg">
 
 </p><p>
   </p></td></tr><tr>
@@ -335,45 +335,6 @@ Name your zip file according to the convention <i>FirstName_lastName_hw3.zip</i>
 
      </td>
   </tr>
-  <tr>
-    <td><br></td>
-  </tr>
-  <tr>
-
-    <th align="left" valign="top">Academic<br>Honesty:</th>
-    <td align="left">Remember the policy on Academic Honesty: You may discuss the
-       assignment with others, but you are to do your own work. The official WPI statement
-       for Academic Honesty can be accessed
-       <a href="http://www.wpi.edu/offices/policies/honesty/policy.html">HERE</a>.
-    </td>
-  </tr>
-  <tr>
-    <td><br></td>
-  </tr>
-
-  <tr>
-    <th align="left" valign="top">References:</th>
-    <td align="left">
-    <table cellspacing="4">
-      <tbody><tr>
-        <td><a href="AlgoBeautyOfPlants.jpg"><img width="141" height="188" src="http://web.cs.wpi.edu/~emmanuel/courses/cs543/f13/homework/HW3/AlgoBeautyOfPlants.jpg"></a></td>
-        <td>
-          Most of the motivation for my interest in this work comes from the book
-          "The Algorithmic Beauty of Plants," by Prezmyslaw Prusinkiewicz and Arstid Lindenmayer,
-          Springer Verlag, New York, 1990, ISBN 0-387-97297-8, ISBN 3-540-97297-8.
-          <p>
-
-          The whole book has been put <a href="http://algorithmicbotany.org/papers/#abop">online</a> by
-          the author. In addition, there are links to other interesting works on this page.
-          </p><p>
-          You can also find it on <a href="http://www.amazon.com/gp/product/0387946764/002-0022112-1584858?v=glance&amp;n=283155&amp;n=507846&amp;s=books&amp;v=glance">Amazon</a>.
-        </p></td>
-      </tr>
-    
-  
-
-</tbody></table>
-</td></tr>
   <tr>
     <td><br></td>
   </tr>
